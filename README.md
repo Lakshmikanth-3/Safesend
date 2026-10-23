@@ -1,0 +1,184 @@
+# SafeSend
+
+**SafeSend makes crypto transfers safer for people who are new to crypto, especially older adults and young people in Singapore.** It combines checks on who you are paying, payment pauses you can configure, and a simple review by a trusted family member.
+
+Web3 for Social Good 2026 (SMU × GSR Foundation × UMA) · **Tech Track** · Monad testnet (chain 10143)
+
+**The golden rule:** fixed smart-contract rules and authorised people decide. AI only explains and guides. AI can never move money.
+
+---
+
+## 1. The problem
+
+From the Singapore Police Force's *Mid-Year Scam and Cybercrime Brief 2026* ([PDF](https://www.police.gov.sg/-/media/SPF/Media-Room/Statistics/Mid-Year-Scam-and-Cybercrime-Brief-2026/Mid-Year-Scam-and-Cybercrime-Brief-2026.pdf)):
+
+- About **S$410.6 million** was lost to scams in the first half of 2026 (para 3).
+- Cryptocurrency losses were about **S$65.5 million, or 16.0%** of total scam losses (para 11). The SPF notes that "scammers leverage cryptocurrency as transactions are irreversible and difficult to trace".
+- The average loss per **elderly victim rose to S$42,347**, the highest of any age group (para 17).
+- Government official impersonation, a script SafeSend's guidance targets, mostly hit victims aged 65 and above (Annex).
+
+Safe and Coinbase already offer limits, delays, trusted contacts and recipient checks, built for people who already understand crypto. **SafeSend makes the same protections easy to understand and use** for beginners and their families: simple setup, reasons in plain words, and a guided review for the guardian.
+
+## 2. Who it is for
+
+| Protected user | Guardian |
+|---|---|
+| **Mdm Tan, 68.** Gets a call from a "bank officer" saying her money must be moved to a "safe account". | **Wei Ming**, her son. Reviews any paused payment with a checklist, and can add a backup guardian. |
+| **A 16-year-old** with a first crypto account, tempted by "guaranteed" returns from a group chat. | **Their parent.** Approves anything unusual before it leaves. |
+
+## 3. How it works
+
+```
+Protected user taps Send
+        │
+"What is this payment for?"  Family · Shopping · Bills · Investment · Someone asked me to · Other
+        │
+Will the contract pause this?
+  ├─ no  (saved recipient, within limits, no reports) ──► paid straight away
+  └─ yes ──► warning screen
+              • why it will be paused, in plain words
+              • "Banks, police and government officers will never ask you to move money to keep it safe."
+              • reports about the recipient: source, date, verified or not
+              [Cancel transfer] → nothing is sent
+              [Ask my guardian to check] → the contract holds the money in the vault
+                        │
+              Guardian (or backup guardian) review, in this order:
+               1. amount, recipient, how long it has waited
+               2. why it was paused + what the user said it is for
+               3. reports, with source, date and status
+               4. checklist + guidance (AI or fixed rules, labelled) + a suggested question
+               5. Call [name], using only the number saved at setup
+               6. "Use the official number from their website, never one the caller gave."
+               7. [Stop transfer] (red)   [Approve] (green, only after "I have spoken to [name] and checked this request")
+                        │
+          Stop ─────────┼──────── Approve ─────── Nobody answers
+   money back to user   │   paid to recipient    money back to user automatically
+```
+
+### When a payment is paused (the contract decides)
+
+| Rule | What the user reads | Contract reason |
+|---|---|---|
+| The recipient has been reported | "Other people have reported this recipient (2 reports). Reports can be wrong, so your guardian checks." | `NETWORK_FLAG` |
+| The recipient is new | "You have not sent money to this person before." | `NEW_PAYEE` |
+| One payment is over the limit | "This is more than the $1,000 limit your guardian set for one payment." | `OVER_CAP` |
+| Payments in a day or week add up past the total limit | "Together with your other payments recently, this goes over the total your guardian set." | `OVER_PERIOD_LIMIT` |
+
+### Reports, shown honestly
+
+- Every report shows **where it came from**, **when**, and whether it is **verified or unverified**.
+- Counts read like "2 reports (1 verified, 1 unverified)", never "scam".
+- No reports shows **"No reports found"**, never "safe".
+- Every report has a **"Wrong report? Request correction"** link.
+- Demo reports are labelled **Sample data** on screen (any contact ending in `4567`).
+
+### Guidance for the guardian (AI only explains)
+
+The guardian sees two or three sentences on what the evidence shows and what is uncertain, plus one question fitted to the stated purpose. It comes from an AI model when an `ANTHROPIC_API_KEY` is set, and from fixed rules otherwise. The screen always says which. The pause has already happened before the guidance runs, and the guidance cannot change it. Evaluation: [`docs/ai-evaluation.md`](docs/ai-evaluation.md).
+
+### Guardian settings
+
+- **Total limit:** "no more than $X in total every day or week without asking me". Signed with the guardian's Face ID and enforced by the contract.
+- **Backup guardian:** a second person who can stop or approve a paused payment if the main guardian cannot be reached. The main guardian invites them, and the backup can act only after the main guardian approves them with Face ID. A backup cannot change any limits.
+- **Phone number:** saved by the guardian on their own phone. The Call button never uses a number from a message.
+
+### Made for older eyes
+
+Body text is 18px or larger, buttons are at least 56px tall, text contrast is at least 4.5:1, and there is a **Large text** switch. Main screens have no crypto words; technical details live under **Details**.
+
+## 4. Why Web3
+
+SafeSend could not keep its main promise with an ordinary app and database:
+
+1. **Nobody can override the rules, including SafeSend.** The pause rules and limits live in a smart contract. Our server only relays; it cannot release a paused payment, raise a limit or move money. A scammer who tricks our support staff, or an insider, still cannot get the money out.
+2. **Only the guardian's own Face ID releases money.** The guardian's approval is a passkey signature checked inside the contract (P256 verification onchain). A server or a stolen password cannot fake it.
+3. **The fail-safe does not depend on us.** If nobody answers, anyone can trigger the expiry and the money goes back to the sender. Even if SafeSend shut down, the funds would not be stuck.
+4. **Reports are a shared public good.** Scam reports are stored in a public contract, not a private blocklist. Any wallet, exchange or app can read them, and each one is tied to a real stopped payment, which makes spam reports costly.
+5. **Every decision is auditable.** Pauses, stops, approvals and expiries are public events. Families, researchers and regulators can check what happened without trusting our word.
+
+## 5. Feasibility and sustainability
+
+**Path to real use**
+
+| Stage | What | Status |
+|---|---|---|
+| 1. Prototype | Full journey on Monad testnet with test money | Done |
+| 2. Pilot | 10–20 families through SMU and community groups (for example, seniors' activity centres) on testnet; measure how often guardians stop and how long reviews take | Next |
+| 3. Mainnet | Real stablecoins on an EVM chain, after a security audit of the contract | Later |
+| 4. Embed | Offer the pause-and-review flow as a module that wallets and exchanges add to their own apps | Later |
+
+**Who pays**
+
+- **Families:** free. People most at risk should not have to pay for protection.
+- **Wallets and exchanges:** pay to embed SafeSend's protection, because scams cost them in support work, refunds and reputation, and Singapore's regulators expect anti-scam measures.
+- **Grants:** social-impact funding (for example GSR Foundation) for the pilot and the audit.
+
+**Running costs are low:** the contract costs nothing to run; the relayer pays small network fees; the AI guidance is optional and falls back to fixed rules at no cost.
+
+**Risks and how we handle them**
+
+- *Guardian too slow or unavailable:* backup guardian, and the money returns automatically.
+- *False reports:* reports never block on their own, show whether they are verified, and can be corrected.
+- *Crypto is still unfamiliar to many seniors:* plain words, large text, and the family doing the checking.
+- *Partnerships:* links with ScamShield and banks would need agreements we do not have yet.
+
+## 6. Running it
+
+Needs Node 22+, pnpm 9+ and [Foundry](https://getfoundry.sh).
+
+```bash
+pnpm install
+cp .env.example .env     # fill in MONAD_RPC_URL, the three private keys, RELAYER_ADDRESS and AGENT_ADDRESS
+pnpm dev                 # relayer :8787, agent :8788, app http://localhost:8081
+```
+
+The keys need testnet MON (https://faucet.monad.xyz). The relayer pays gas and the agent runs expiries. Neither can move anyone's money: spending needs the protected user's signature, and releasing a paused payment needs a guardian's Face ID, checked by the contract.
+
+### Checks
+
+```bash
+cd contracts && forge test               # 116 passing
+pnpm parity                              # TypeScript and Solidity agree on every signing challenge
+pnpm typecheck && pnpm -r test
+pnpm e2e                                 # the whole journey on a local chain
+pnpm e2e:testnet                         # the same journey on Monad testnet (needs pnpm dev running)
+pnpm --filter @thunai/agent evaluate     # regenerates docs/ai-evaluation.md
+```
+
+## 7. Deployment (Monad testnet)
+
+| Contract | Address |
+|---|---|
+| Vault (`ThunaiVault`) | `0x9cFe6bC36F8C1aC0776a67957eB81CF0136681C9` |
+| Reports (`ScamSignals`) | `0xb51732F6b45878fe24853776B28c3D86fCc350De` |
+| Stand-in deposit token (tCTK) | `0x2ad2937e2354A17deA0d3B35390091887C83e134` |
+| Stand-in dollar (tAUSD) | `0x20CadD06815C0a4c261C61A0DE03c6ccD004923C` |
+
+To deploy your own:
+
+1. Set `RELAYER_ADDRESS` and `AGENT_ADDRESS` in `.env` first, or both roles default to the deployer.
+2. `pnpm contracts:deploy` writes `contracts/deployments/10143.json`, which every service reads.
+3. The deploy mints the stand-in float to the deployer. Mint tCTK to the relayer (for the testnet "add money" stand-in) and tAUSD to the vault as backing. Both tokens are labelled testnet stand-ins with open minting.
+4. Set `THUNAI_START_BLOCK` to the deploy block and restart `pnpm dev`.
+
+Contract and package names (`ThunaiVault`, `ScamSignals`, `@thunai/*`) are kept on purpose: renaming them would change the signing domain, every passkey challenge and the deployment files. See [`docs/safesend-map.md`](docs/safesend-map.md).
+
+## 8. Demo script (about 3 minutes)
+
+1. **Problem (30s):** S$410.6M lost in H1 2026; S$65.5M from crypto wallets; elderly lose most; crypto cannot be reversed.
+2. **Setup (20s):** Wei Ming becomes Mdm Tan's guardian, saves her phone number, sets a weekly total limit and adds a backup guardian.
+3. **Normal payment (20s):** a small payment to a saved recipient goes straight through.
+4. **Scam (60s):** a "bank officer" asks for S$3,000. Mdm Tan picks "Someone asked me to". The payment is paused and she sees why. Wei Ming sees the reports, the checklist and the guidance, calls her and taps **Stop**. The money is back.
+5. **Guardian unavailable (20s):** the backup guardian steps in, or nobody answers and the money returns automatically.
+6. **Why it is better (30s):** Safe and Coinbase have the features. SafeSend makes them understandable for beginners and families.
+
+## 9. Known limits
+
+- Reports come from SafeSend families plus labelled samples. A real external source (for example Chainabuse) depends on data access and is not connected.
+- The AI column of the evaluation is empty until an `ANTHROPIC_API_KEY` is set. The rule-based fallback warned on 5/5 scam scenarios and gave 1 false alarm in 5 genuine ones.
+- A backup guardian who clears their phone must be invited again; "restore with Face ID" only finds main guardians and protected users.
+- Testnet only, with stand-in dollars.
+
+## 10. Licence
+
+MIT. See [`LICENSE`](LICENSE).
