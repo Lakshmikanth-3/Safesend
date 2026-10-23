@@ -1,0 +1,55 @@
+# Thunai indexer (Envio HyperIndex 3)
+#
+# This is not decoration: the indexer is what makes the rescue fast enough to matter.
+# It drives the guardian's alert feed, the evidence line on a hold card ("1 verified
+# family reported this number, 2 minutes ago"), and the public "families protected"
+# counter used for traction.
+#
+# Monad testnet is supported by HyperIndex, HyperSync and HyperRPC.
+name: thunai
+description: Family money agent for Indian parents with a child studying abroad
+
+# The addresses and start block are the Agora vault on Monad testnet (contracts/deployments/10143.agora.json,
+# deploy block read from contracts/broadcast). They are written out rather than read from environment
+# variables so that Envio's hosted service, which builds from this file, needs no extra settings.
+# After a redeploy, update the three values marked "deployment".
+chains:
+  - id: 10143 # Monad testnet
+    start_block: 70125617 # deployment: the block the Agora vault was created in (10143.agora.json)
+    contracts:
+      - name: ThunaiVault
+        address:
+          - "0xF2BA20FaF5f171DcDB9E7F70a489855d170465C1" # deployment
+        handler: src/EventHandlers.ts
+        events:
+          - event: FamilyRegistered(uint256 indexed familyId, address indexed studentAcct, address indexed guardianAcct)
+          - event: EnvelopeSet(uint256 indexed familyId, uint128 weeklyAmount, uint128 perWithdrawalCap, uint64 cadence, uint64 nextRunAt)
+          - event: Funded(uint256 indexed familyId, address indexed from, uint128 amount, uint128 homeBalance)
+          - event: Payout(uint256 indexed familyId, uint128 amountIn, uint128 amountOut, bool viaAgora, uint64 timestamp)
+          - event: HoldOpened(uint256 indexed holdId, uint256 indexed familyId, address to, uint128 amount, uint8 reason, uint64 releaseAt, bytes32 memoHash)
+          - event: HoldResolved(uint256 indexed holdId, uint256 indexed familyId, bool released, uint64 secondsToResolve)
+          - event: HoldExpired(uint256 indexed holdId, uint256 indexed familyId, uint128 amount)
+          - event: Withdrawn(uint256 indexed familyId, address indexed to, uint128 amount, bytes32 memoHash)
+          - event: CheckRequested(uint256 indexed familyId, uint64 nonce, uint64 requestedAt)
+          - event: LivenessProved(uint256 indexed familyId, uint64 nonce, uint64 timestamp, uint64 latencySeconds)
+          - event: Frozen(uint256 indexed familyId, address by)
+          - event: Unfrozen(uint256 indexed familyId)
+          - event: SOSRaised(uint256 indexed familyId, uint8 reasonCode, uint64 timestamp)
+          - event: NotesStored(uint256 indexed familyId, uint8 indexed role, uint64 version)
+
+      - name: ScamSignals
+        address:
+          - "0x9d2a0Fbf98E9e2F3B2EE2C1A8E9525B3001614A8" # deployment: ScamSignals
+        handler: src/EventHandlers.ts
+        events:
+          - event: Reported(bytes32 indexed handleHash, uint8 scriptId, uint256 indexed holdId, uint256 indexed familyId, uint32 reports)
+          - event: Rebutted(bytes32 indexed handleHash, string uri)
+
+# Envio 3 leaves transaction fields empty unless they are asked for. The handlers record each event's transaction hash,
+# so a judge can open any row on the explorer.
+field_selection:
+  transaction_fields:
+    - hash
+
+# Raw events are kept so a judge can audit any claim the UI makes.
+raw_events: true
