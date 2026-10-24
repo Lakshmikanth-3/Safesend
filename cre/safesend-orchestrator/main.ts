@@ -17,9 +17,9 @@ import { decodeFunctionResult, encodeFunctionData, parseAbi, zeroAddress, type A
 import { z } from "zod"
 
 /**
- * Companion's orchestrator, as a Chainlink CRE workflow.
+ * SafeSend's orchestrator, as a Chainlink CRE workflow.
  *
- * Companion has two jobs that must happen with nobody pressing a button:
+ * SafeSend has two jobs that must happen with nobody pressing a button:
  *
  *   1. send each family's weekly allowance when its signed envelope is due, and
  *   2. when a held payment is unanswered, remind the parent, and give the money back to the student when time is up.
@@ -30,7 +30,7 @@ import { z } from "zod"
  *     families have an allowance due, and the state of each recent hold. Every node in the DON reads the chain, so one
  *     bad RPC cannot make us act on a wrong picture.
  *   - DECIDES what is due, using only the contract's own numbers (due flag, status, release time).
- *   - CALLS Companion's agent over HTTPS (/cre/apply) for each thing that is due. The agent re-checks the chain before
+ *   - CALLS SafeSend's agent over HTTPS (/cre/apply) for each thing that is due. The agent re-checks the chain before
  *     acting, so a stale or replayed request does nothing.
  *
  * What it cannot do, by design: pay anybody. runAllowance runs the envelope the parent already signed with her own

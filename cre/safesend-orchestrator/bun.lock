@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "companion-orchestrator",
+      "name": "safesend-orchestrator",
       "dependencies": {
         "@chainlink/cre-sdk": "^1.19.0",
         "viem": "2.34.0",

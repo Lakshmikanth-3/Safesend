@@ -1,6 +1,6 @@
-# Chainlink CRE: Companion's orchestrator
+# Chainlink CRE: SafeSend's orchestrator
 
-A [Chainlink Runtime Environment](https://docs.chain.link/cre) workflow that runs Companion's two unattended jobs:
+A [Chainlink Runtime Environment](https://docs.chain.link/cre) workflow that runs SafeSend's two unattended jobs:
 
 1. **Send the weekly allowance** when a family's signed envelope is due.
 2. **Look after unanswered holds**: remind the parent, and when time is up, return the money to the student.
@@ -12,7 +12,7 @@ parent's Face ID.
             every minute (CRE cron trigger)
                         │
    ┌────────────────────▼─────────────────────┐
-   │ companion-orchestrator (CRE workflow)    │
+   │ safesend-orchestrator (CRE workflow)    │
    │                                          │
    │ 1. READ Monad testnet (chain 10143)      │◄── EVMClient.callContract, on every DON node,
    │      familyCount, holdCount              │      batched through Multicall3 so a run is
@@ -28,7 +28,7 @@ parent's Face ID.
                         │ POST /agent/cre/apply   x-cre-token: <CRE_TOKEN>
                         ▼
    ┌──────────────────────────────────────────┐
-   │ Companion agent                          │
+   │ SafeSend agent                          │
    │   runAllowance  due?  -> sends it        │   each action is RE-CHECKED against
    │   expireHold    time up? -> money back   │   the chain before it is sent, so a
    │   repage        still open? -> re-page   │   stale or forged request does nothing
@@ -50,7 +50,7 @@ by the P256 precompile, and nothing in this workflow holds it.
 
 - **Onchain reads:** yes. The workflow reads the vault on Monad testnet through CRE's EVM capability
   (`monad-testnet` is a supported CRE network).
-- **External system:** yes. It calls Companion's agent over HTTPS, authenticated with a secret held in CRE's secret store.
+- **External system:** yes. It calls SafeSend's agent over HTTPS, authenticated with a secret held in CRE's secret store.
 - **Onchain writes: no.** CRE writes onchain by sending a signed report through a Chainlink forwarder to a contract that
   implements `onReport`. `ThunaiVault` does not, and giving a vault that holds family money a second authority just
   before a deadline would be the wrong trade. So the actions are sent by the agent's keeper key, which has gas and no
@@ -73,14 +73,14 @@ cre login                       # interactive, opens a browser
 
 cd cre
 cp .env.example .env            # then fill it in, see below
-cd companion-orchestrator && bun install && cd ..
+cd safesend-orchestrator && bun install && cd ..
 
 # 1. against your own local agent (pnpm dev running, ORCHESTRATOR and CRE_TOKEN set in the root .env)
-cre workflow simulate companion-orchestrator --target staging-settings \
+cre workflow simulate safesend-orchestrator --target staging-settings \
   --config ./config.local.json --non-interactive --trigger-index 0
 
 # 2. against the deployed agent
-cre workflow simulate companion-orchestrator --target staging-settings --non-interactive --trigger-index 0
+cre workflow simulate safesend-orchestrator --target staging-settings --non-interactive --trigger-index 0
 ```
 
 `cre/.env`:

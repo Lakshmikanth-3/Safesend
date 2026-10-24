@@ -1,6 +1,6 @@
 staging-settings:
   user-workflow:
-    workflow-name: "companion-orchestrator-staging"
+    workflow-name: "safesend-orchestrator-staging"
   workflow-artifacts:
     workflow-path: "./main.ts"
     config-path: "./config.staging.json"
