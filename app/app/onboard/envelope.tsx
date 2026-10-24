@@ -19,7 +19,8 @@ import {
 import { colors, space } from "@/theme";
 import { t } from "@/i18n/strings";
 import { signEnvelope } from "@/actions/onboarding";
-import { useDeviceState } from "@/state/store";
+import { setDeviceState, useDeviceState } from "@/state/store";
+import { setRollingLimit } from "@/actions/safesend";
 
 /**
  * The envelope: the only configuration in the product, and the guardian signs it once.
@@ -37,6 +38,8 @@ export default function Envelope() {
 
   const [weekly, setWeekly] = useState(String(ENVELOPE_DEFAULTS.weeklyAmountUsd));
   const [cap, setCap] = useState(String(ENVELOPE_DEFAULTS.perWithdrawalCapUsd));
+  const [daily, setDaily] = useState("");
+  const [phone, setPhone] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | undefined>();
   const [latency, setLatency] = useState<number | undefined>();
@@ -62,6 +65,13 @@ export default function Envelope() {
     try {
       const result = await signEnvelope({ familyId, weeklyUsd, capUsd });
       setLatency(result.latencyMs);
+      // The rest of setup, on the same screen: the number the Call button will use, and an optional
+      // daily total (a second Face ID, checked by the contract).
+      if (phone.trim()) await setDeviceState({ protectedUserPhone: phone.trim() });
+      const dailyUsd = Number(daily);
+      if (daily.trim() && Number.isFinite(dailyUsd) && dailyUsd > 0) {
+        await setRollingLimit({ familyId, limitUsd: dailyUsd, days: 1 });
+      }
       router.replace("/guardian");
     } catch (cause) {
       setError((cause as Error).message);
@@ -101,6 +111,33 @@ export default function Envelope() {
             editable={!busy}
           />
         </Field>
+      </Card>
+
+      <Card>
+        <Field label="Most in total per day (optional)" hint="Anything that takes the day's total over this also asks you.">
+          <TextInput
+            value={daily}
+            onChangeText={setDaily}
+            keyboardType="decimal-pad"
+            placeholder="e.g. 200"
+            placeholderTextColor={colors.inkFaint}
+            style={ui.input}
+            editable={!busy}
+          />
+        </Field>
+        <Divider />
+        <Field label="Their phone number" hint="From your own contacts. The Call button only uses this.">
+          <TextInput
+            value={phone}
+            onChangeText={setPhone}
+            keyboardType="phone-pad"
+            placeholder="+65 9123 4567"
+            placeholderTextColor={colors.inkFaint}
+            style={ui.input}
+            editable={!busy}
+          />
+        </Field>
+        <Small>Add a backup guardian from your home screen after this.</Small>
       </Card>
 
       <Card tone={{ bg: colors.trustSoft, accent: colors.trust }}>
