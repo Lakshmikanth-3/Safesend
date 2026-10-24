@@ -73,6 +73,8 @@ export const HOLD_STATUS = {
   RELEASED: 2,
   CANCELLED: 3,
   EXPIRED: 4,
+  /** Approved by a guardian, waiting out the cooling-off period. */
+  APPROVED: 5,
 } as const;
 
 export const HOLD_STATUS_NAME: Record<number, string> = {
@@ -81,6 +83,7 @@ export const HOLD_STATUS_NAME: Record<number, string> = {
   2: "RELEASED",
   3: "CANCELLED",
   4: "EXPIRED",
+  5: "APPROVED",
 };
 
 /**

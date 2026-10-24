@@ -191,6 +191,37 @@ export const ThunaiVaultAbi = [
   },
   {
     "type": "function",
+    "name": "cancelBySender",
+    "inputs": [
+      {
+        "name": "holdId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "senderSig",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "coolOff",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint64",
+        "internalType": "uint64"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "ctk",
     "inputs": [],
     "outputs": [
@@ -318,6 +349,19 @@ export const ThunaiVaultAbi = [
       }
     ],
     "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "executeRelease",
+    "inputs": [
+      {
+        "name": "holdId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
     "type": "function",
@@ -1095,6 +1139,25 @@ export const ThunaiVaultAbi = [
   },
   {
     "type": "function",
+    "name": "senderCancelDigest",
+    "inputs": [
+      {
+        "name": "holdId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "setAgora",
     "inputs": [
       {
@@ -1166,6 +1229,19 @@ export const ThunaiVaultAbi = [
             "internalType": "bytes32"
           }
         ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "setCoolOff",
+    "inputs": [
+      {
+        "name": "seconds_",
+        "type": "uint64",
+        "internalType": "uint64"
       }
     ],
     "outputs": [],
@@ -1824,6 +1900,19 @@ export const ThunaiVaultAbi = [
   },
   {
     "type": "event",
+    "name": "CoolOffSet",
+    "inputs": [
+      {
+        "name": "seconds_",
+        "type": "uint64",
+        "indexed": false,
+        "internalType": "uint64"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
     "name": "EnvelopeSet",
     "inputs": [
       {
@@ -1927,6 +2016,56 @@ export const ThunaiVaultAbi = [
       },
       {
         "name": "homeBalance",
+        "type": "uint128",
+        "indexed": false,
+        "internalType": "uint128"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "HoldApproved",
+    "inputs": [
+      {
+        "name": "holdId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "familyId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "paysAt",
+        "type": "uint64",
+        "indexed": false,
+        "internalType": "uint64"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "HoldCancelledBySender",
+    "inputs": [
+      {
+        "name": "holdId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "familyId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "amount",
         "type": "uint128",
         "indexed": false,
         "internalType": "uint128"

@@ -458,6 +458,25 @@ export class VaultService {
     return this.chain.send({ to: this.vault, data, label: "resolveHold" });
   }
 
+  async senderCancelDigest(holdId: bigint): Promise<Hex> {
+    return this.chain.publicClient.readContract({
+      address: this.vault,
+      abi: ThunaiVaultAbi,
+      functionName: "senderCancelDigest",
+      args: [holdId],
+    });
+  }
+
+  async cancelBySender(holdId: bigint, signature: Hex): Promise<SentTransaction> {
+    const data = encodeFunctionData({ abi: ThunaiVaultAbi, functionName: "cancelBySender", args: [holdId, signature] });
+    return this.chain.send({ to: this.vault, data, label: "cancelBySender" });
+  }
+
+  async executeRelease(holdId: bigint): Promise<SentTransaction> {
+    const data = encodeFunctionData({ abi: ThunaiVaultAbi, functionName: "executeRelease", args: [holdId] });
+    return this.chain.send({ to: this.vault, data, label: "executeRelease" });
+  }
+
   async expireHold(holdId: bigint): Promise<SentTransaction> {
     const data = encodeFunctionData({ abi: ThunaiVaultAbi, functionName: "expireHold", args: [holdId] });
     return this.chain.send({ to: this.vault, data, label: "expireHold" });
