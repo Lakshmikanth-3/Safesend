@@ -1,4 +1,4 @@
-<p align="center"><img src="app/app/logo.png" alt="SafeSend. Lock. Review. Send." width="180"></p>
+<p align="center"><img src="docs/logo.svg" alt="SafeSend. Lock. Review. Send." width="320"></p>
 
 # SafeSend
 
