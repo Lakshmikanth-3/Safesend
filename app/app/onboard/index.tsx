@@ -1,3 +1,4 @@
+import { Logo } from "@/ui/Logo";
 import { useState } from "react";
 import { Image, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { useRouter } from "expo-router";
@@ -10,7 +11,6 @@ import { endpoints } from "@/api/client";
 import { restoreFromPasskey, startAsStudent } from "@/actions/onboarding";
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const logo = require("../logo.png") as number;
 
 /**
  * The landing page.
@@ -94,20 +94,11 @@ export default function Onboard() {
             paddingTop: insets.top + space.lg,
           }}
         >
-          {/* The landing page is English only.  */}
-          <View style={{ alignItems: "center" }}>
-            <Text style={[type_.small, { color: colors.ink, fontWeight: "700" }]}>English</Text>
-          </View>
 
           <View style={{ flex: 1, justifyContent: "center", paddingVertical: space.xxl }}>
             {/* Wordmark */}
             <View style={{ alignItems: "center", gap: space.sm, marginBottom: space.xl }}>
-              <Image
-                source={logo}
-                accessibilityLabel="SafeSend. Lock. Review. Send."
-                resizeMode="contain"
-                style={{ width: 216, height: 168, borderRadius: 20 }}
-              />
+              <Logo size={92} />
               <Text
                 style={[
                   type_.body,
