@@ -40,7 +40,7 @@ Safe and Coinbase already have limits, delays and trusted contacts. SafeSend mak
 
 ## Technology
 
-- Monad testnet. Vault `0x9cFe6bC36F8C1aC0776a67957eB81CF0136681C9`, reports `0xb51732F6b45878fe24853776B28c3D86fCc350De`.
+- Monad testnet. Vault `0x918022A5aDd2d250617ec64F7b38C5EEcf28E48f`, reports `0x3b7e4d3B44E91d2C0396d781F2BcdfE5fa87Cd48`.
 - Solidity (Foundry): pause rules, rolling total limit, backup guardian, passkey (P256) approval checked onchain. 116 tests.
 - Relayer pays gas and holds no spending power. Agent writes guidance (Anthropic model or rule-based fallback).
 - Expo / React Native web app with Face ID passkeys.

@@ -55,8 +55,10 @@ Will the contract pause this?
                6. "Use the official number from their website, never one the caller gave."
                7. [Stop transfer] (red)   [Approve] (green, only after "I have spoken to [name] and checked this request")
                         │
-          Stop ─────────┼──────── Approve ─────── Nobody answers
-   money back to user   │   paid to recipient    money back to user automatically
+          Stop ─────────┼──────── Approve ──────────────────── Nobody answers
+   money back to user   │   2-minute cooling-off, then paid     money back to user automatically
+                        │   (the user can still cancel)
+   The user can also cancel a paused payment herself at any time: it only ever returns the money to her.
 ```
 
 ### When a payment is paused (the contract decides)
@@ -87,8 +89,14 @@ The guardian sees one or two short sentences on what the evidence shows and what
 
 The AI catches every scam, including ones with no obvious keywords (a dating-app "friend", unlocking game winnings, a "son" on a new number), which the rules miss. Both still raise false alarms on genuine payments that mention police or banks. The guardian makes the final decision either way.
 
+### The protected user stays in control
+
+- **Cancel any time:** while a payment is paused, the protected user can cancel it herself. Cancelling can only return the money to her, so it is always safe to allow, even under pressure.
+- **Cooling-off after approval:** an approved payment waits a short time (2 minutes in the demo) before it is sent. If the approval was given under pressure, she can still cancel.
+
 ### Guardian settings
 
+- **One-screen setup:** the weekly top-up, the single-payment limit, an optional daily total and the protected user's phone number, all on one screen.
 - **Total limit:** "no more than $X in total every day or week without asking me". Signed with the guardian's Face ID and enforced by the contract.
 - **Backup guardian:** a second person who can stop or approve a paused payment if the main guardian cannot be reached. The main guardian invites them, and the backup can act only after the main guardian approves them with Face ID. A backup cannot change any limits.
 - **Phone number:** saved by the guardian on their own phone. The Call button never uses a number from a message.
@@ -158,7 +166,7 @@ The keys need testnet MON (https://faucet.monad.xyz). The relayer pays gas and t
 ### Checks
 
 ```bash
-cd contracts && forge test               # 116 passing
+cd contracts && forge test               # 126 passing
 pnpm parity                              # TypeScript and Solidity agree on every signing challenge
 pnpm typecheck && pnpm -r test
 pnpm e2e                                 # the whole journey on a local chain
@@ -172,10 +180,10 @@ pnpm --filter @thunai/agent evaluate     # regenerates docs/ai-evaluation.md
 
 | Contract | Address |
 |---|---|
-| Vault (`ThunaiVault`) | `0x9cFe6bC36F8C1aC0776a67957eB81CF0136681C9` |
-| Reports (`ScamSignals`) | `0xb51732F6b45878fe24853776B28c3D86fCc350De` |
-| Stand-in deposit token (tCTK) | `0x2ad2937e2354A17deA0d3B35390091887C83e134` |
-| Stand-in dollar (tAUSD) | `0x20CadD06815C0a4c261C61A0DE03c6ccD004923C` |
+| Vault (`ThunaiVault`) | `0x918022A5aDd2d250617ec64F7b38C5EEcf28E48f` |
+| Reports (`ScamSignals`) | `0x3b7e4d3B44E91d2C0396d781F2BcdfE5fa87Cd48` |
+| Stand-in deposit token (tCTK) | `0xc79f8fa19F8D197a42100BbEf95F2db989266d3f` |
+| Stand-in dollar (tAUSD) | `0xA880e099Ca5134a992B3aEa6c7D7099ae4802771` |
 
 To deploy your own: set `RELAYER_ADDRESS` and `AGENT_ADDRESS` in `.env` first (or both roles default to the deployer), run `pnpm contracts:deploy`, then mint tCTK to the relayer and tAUSD to the vault as backing. Both tokens are testnet stand-ins with open minting.
 

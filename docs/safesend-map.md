@@ -65,10 +65,10 @@ pnpm dev                           # relayer :8787, agent :8788, app http://loca
 
 | Contract | Address |
 |---|---|
-| ThunaiVault (SafeSend, with rolling limit and backup guardian) | `0x9cFe6bC36F8C1aC0776a67957eB81CF0136681C9` |
-| ScamSignals | `0xb51732F6b45878fe24853776B28c3D86fCc350De` |
-| Stand-in CTK (tCTK) | `0x2ad2937e2354A17deA0d3B35390091887C83e134` |
-| Stand-in AUSD (tAUSD) | `0x20CadD06815C0a4c261C61A0DE03c6ccD004923C` |
+| ThunaiVault (SafeSend, with rolling limit and backup guardian) | `0x918022A5aDd2d250617ec64F7b38C5EEcf28E48f` |
+| ScamSignals | `0x3b7e4d3B44E91d2C0396d781F2BcdfE5fa87Cd48` |
+| Stand-in CTK (tCTK) | `0xc79f8fa19F8D197a42100BbEf95F2db989266d3f` |
+| Stand-in AUSD (tAUSD) | `0xA880e099Ca5134a992B3aEa6c7D7099ae4802771` |
 
 Earlier deployments are kept as `contracts/deployments/10143.companion-original.json` and `10143.safesend-v1.json` (rolling limit only). The relayer state for v1 is archived in `relayer/.data/*.safesend-v1.json`.
 
