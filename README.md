@@ -78,7 +78,14 @@ Will the contract pause this?
 
 ### Guidance for the guardian (AI only explains)
 
-The guardian sees one or two short sentences on what the evidence shows and what is uncertain, plus one question fitted to the stated purpose. It comes from an AI model when an `ANTHROPIC_API_KEY` is set, and from fixed rules otherwise. The screen always says which. The pause has already happened before the guidance runs, and the guidance cannot change it. Evaluation: [`docs/ai-evaluation.md`](docs/ai-evaluation.md).
+The guardian sees one or two short sentences on what the evidence shows and what is uncertain, plus one question fitted to the stated purpose. It comes from a free AI model (`openai/gpt-oss-120b` on Groq, any OpenAI-compatible API works) when one is configured, and from fixed rules otherwise. The screen always says which. The pause has already happened before the guidance runs, and the guidance cannot change it. Evaluation on 10 scenarios ([`docs/ai-evaluation.md`](docs/ai-evaluation.md)):
+
+| Guidance | Scams warned | False alarms on genuine payments |
+|---|---|---|
+| Fixed rules (fallback) | 5 / 5 | 1 / 5 |
+| AI (gpt-oss-120b, free on Groq) | 5 / 5, with higher confidence | 0 / 5 |
+
+The prompt was adjusted once after the first AI run (3 false alarms), so fresh scenarios are needed to confirm the gain.
 
 ### Guardian settings
 
@@ -192,7 +199,7 @@ A real recording of the app on Monad testnet, two phones (Mdm Tan and Wei Ming):
 ## 9. Known limits
 
 - Reports come only from SafeSend guardians who stopped a payment. An external source (for example Chainabuse) depends on data access and is not connected yet.
-- The AI column of the evaluation is empty until an `ANTHROPIC_API_KEY` is set. The rule-based fallback warned on 5/5 scam scenarios and gave 1 false alarm in 5 genuine ones.
+- The AI evaluation uses 10 hand-written scenarios and the prompt was tuned once on them; testing with real users is planned for refinement.
 - A backup guardian who clears their phone must be invited again; "restore with Face ID" only finds main guardians and protected users.
 - Testnet only, with stand-in dollars.
 - On serverless hosting, an unanswered pause is refunded when someone opens it or by the daily cron, not to the exact minute.
