@@ -12,8 +12,7 @@ export default function Navbar() {
       <div className="mx-auto flex h-[64px] max-w-[1680px] items-center justify-between px-5 md:px-8 2xl:px-16">
         <a href="/" className="flex items-center gap-2.5">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo.png" alt="" className="h-7 w-auto" />
-          <span className="font-grotesk text-[20px] font-extrabold tracking-tight">SafeSend</span>
+          <img src="/logo.png" alt="SafeSend" className="h-11 w-auto rounded-lg" />
         </a>
         <nav className="hidden items-center gap-8 md:flex">
           {links.map((l) => (

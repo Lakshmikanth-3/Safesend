@@ -104,26 +104,10 @@ export default function Onboard() {
             <View style={{ alignItems: "center", gap: space.sm, marginBottom: space.xl }}>
               <Image
                 source={logo}
-                accessibilityLabel="SafeSend"
+                accessibilityLabel="SafeSend. Lock. Review. Send."
                 resizeMode="contain"
-                style={{ width: 112, height: 100, marginBottom: space.sm }}
+                style={{ width: 216, height: 168, borderRadius: 20 }}
               />
-              <View style={{ flexDirection: "row", alignItems: "baseline", justifyContent: "center", gap: 8, flexWrap: "wrap" }}>
-                <Text
-                  style={{
-                    fontFamily: fonts.display,
-                    fontSize: 46,
-                    fontWeight: "800",
-                    letterSpacing: -1.8,
-                    color: colors.ink,
-                  }}
-                >
-                  SafeSend
-                </Text>
-              </View>
-              <Text style={[type_.small, { color: colors.inkFaint, textAlign: "center" }]}>
-                Safer payments for beginners and their families
-              </Text>
               <Text
                 style={[
                   type_.body,

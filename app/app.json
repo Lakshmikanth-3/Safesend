@@ -7,11 +7,15 @@
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
-    "plugins": ["expo-router"],
+    "plugins": [
+      "expo-router"
+    ],
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "app.thunai",
-      "associatedDomains": ["webcredentials:thunai.app"]
+      "associatedDomains": [
+        "webcredentials:thunai.app"
+      ]
     },
     "android": {
       "package": "app.thunai",
@@ -22,10 +26,11 @@
       "output": "single",
       "name": "SafeSend",
       "shortName": "SafeSend",
-      "themeColor": "#00FF22",
+      "themeColor": "#000000",
       "backgroundColor": "#FFFFFF",
       "display": "standalone",
-      "lang": "en"
+      "lang": "en",
+      "favicon": "./app/logo.png"
     },
     "extra": {
       "relayerUrl": "http://localhost:8787",
