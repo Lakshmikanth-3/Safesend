@@ -56,106 +56,71 @@ export function pauseReasons(facts: PauseFacts): string[] {
   const r = facts.reason;
   if ((facts.reportCount ?? 0) > 0 || r === HOLD_REASON.NETWORK_FLAG) {
     const n = facts.reportCount ?? 0;
-    out.push(
-      n > 0
-        ? `Other people have reported this recipient (${n} report${n === 1 ? "" : "s"}). Reports can be wrong, so your guardian checks.`
-        : "Other people have reported this recipient. Reports can be wrong, so your guardian checks.",
-    );
+    out.push(n > 0 ? `Reported by others (${n}). Reports can be wrong.` : "Reported by others. Reports can be wrong.");
   }
   if (facts.newRecipient || r === HOLD_REASON.NEW_PAYEE || r === HOLD_REASON.NETWORK_FLAG) {
-    out.push("You have not sent money to this person before.");
+    out.push("New recipient.");
   }
   if (facts.overSingleLimit || r === HOLD_REASON.OVER_CAP) {
-    out.push(
-      facts.limitLabel
-        ? `This is more than the ${facts.limitLabel} limit your guardian set for one payment.`
-        : "This is more than the limit your guardian set for one payment.",
-    );
+    out.push(facts.limitLabel ? `Over your ${facts.limitLabel} limit.` : "Over your limit.");
   }
   if (r === HOLD_REASON.OVER_PERIOD_LIMIT) {
-    out.push("Together with your other payments recently, this goes over the total your guardian set.");
+    out.push("Over your total limit for now.");
   }
-  if (r === HOLD_REASON.CHECK_PENDING) out.push("Your guardian is checking on you right now.");
-  if (r === HOLD_REASON.FROZEN) out.push("Your family has paused all payments for now.");
-  if (out.length === 0) out.push("This payment is different from your usual ones.");
+  if (r === HOLD_REASON.CHECK_PENDING) out.push("Your guardian is checking on you.");
+  if (r === HOLD_REASON.FROZEN) out.push("All payments are paused.");
+  if (out.length === 0) out.push("Unusual payment.");
   return out;
 }
 
-export const SAFETY_TIP =
-  "Banks, police and government officers will never ask you to move money to keep it safe.";
+export const SAFETY_TIP = "Banks and police never ask you to move money to keep it safe.";
 
-export const OFFICIAL_NUMBER_TIP =
-  "If someone says they are from a bank or the government, call them back using the official number on their website. Never use a number the caller gave.";
+export const OFFICIAL_NUMBER_TIP = "Bank or government caller? Call back on the official number, never the caller's.";
 
 // ------------------------------------------------------------- risk reports
 
 export type RiskReport = {
   source: string;
-  reportedAt: number; // unix seconds
+  reportedAt: number; // unix seconds, the latest report
   verified: boolean;
   summary: string;
-  sample: boolean; // demo data, clearly labelled on screen
+  count: number;
 };
 
 /**
- * SAMPLE reports for the demo, keyed by the masked contact the relayer shows
- * (e.g. "+65 •••• 4567"). Clearly marked as samples wherever they appear. A real
- * source (Chainabuse or similar) is Phase 3 work, after checking data access.
+ * Reports about a recipient, read from the chain. Each one exists only because a guardian
+ * stopped a real payment to this recipient and then reported it with their own Face ID, so
+ * each is tied to a real event. External sources (such as Chainabuse) are future work.
  */
-const SAMPLE_REPORTS: Record<string, Omit<RiskReport, "sample">[]> = {
-  "4567": [
-    {
-      source: "Sample: community report",
-      reportedAt: Date.UTC(2026, 9, 12) / 1000,
-      verified: true,
-      summary: "Caller said they were a bank officer and asked for money to be moved to a \"safe account\".",
-    },
-    {
-      source: "Sample: community report",
-      reportedAt: Date.UTC(2026, 9, 20) / 1000,
-      verified: false,
-      summary: "Asked for an urgent transfer to release a parcel.",
-    },
-  ],
-};
-
-function sampleKey(contact: string | undefined): string | undefined {
-  if (!contact) return undefined;
-  const digits = contact.replace(/\D/g, "");
-  return digits.length >= 4 ? digits.slice(-4) : undefined;
-}
-
-/**
- * Every report we know about for a recipient: the SafeSend family network's onchain
- * reports, plus clearly labelled samples in the demo.
- */
-export function riskReports(options: {
-  contact?: string;
-  networkCount?: number;
-  networkLastAt?: number;
-}): RiskReport[] {
-  const reports: RiskReport[] = [];
+export function riskReports(options: { contact?: string; networkCount?: number; networkLastAt?: number }): RiskReport[] {
   const n = options.networkCount ?? 0;
-  for (let i = 0; i < n; i++) {
-    reports.push({
-      source: "SafeSend families (a guardian stopped a payment and reported it)",
+  if (n === 0) return [];
+  return [
+    {
+      source: "SafeSend guardians, recorded on Monad",
       reportedAt: options.networkLastAt ?? 0,
-      verified: false,
-      summary: "A guardian stopped a payment to this recipient and reported it.",
-      sample: false,
-    });
-  }
-  const key = sampleKey(options.contact);
-  for (const r of (key && SAMPLE_REPORTS[key]) || []) reports.push({ ...r, sample: true });
-  return reports;
+      verified: true,
+      summary:
+        n === 1
+          ? "A guardian stopped a payment to this recipient and reported it."
+          : `${n} guardians stopped payments to this recipient and reported them.`,
+      count: n,
+    },
+  ];
 }
 
 /** "2 reports (1 verified, 1 unverified)". Never "scam", never "safe". */
+export function reportCount(reports: RiskReport[]): number {
+  return reports.reduce((n, r) => n + r.count, 0);
+}
+
 export function reportCountLabel(reports: RiskReport[]): string {
-  if (reports.length === 0) return "No reports found";
-  const verified = reports.filter((r) => r.verified).length;
-  const unverified = reports.length - verified;
-  return `${reports.length} report${reports.length === 1 ? "" : "s"} (${verified} verified, ${unverified} unverified)`;
+  const total = reportCount(reports);
+  if (total === 0) return "No reports found";
+  const verified = reports.filter((r) => r.verified).reduce((n, r) => n + r.count, 0);
+  const unverified = total - verified;
+  const parts = [verified ? `${verified} verified` : "", unverified ? `${unverified} unverified` : ""].filter(Boolean).join(", ");
+  return `${total} report${total === 1 ? "" : "s"} (${parts})`;
 }
 
 /** Where someone goes if a report about them, or their recipient, is wrong. */
@@ -169,9 +134,9 @@ export function correctionLink(subject: string): string {
 // ------------------------------------------------------- guardian checklist
 
 export const GUARDIAN_CHECKLIST = [
-  "What is the payment for, and who asked for it?",
-  "How was the person and their payment details checked, without using details from the request itself?",
-  "Is anyone rushing them, or asking them to keep it secret?",
+  "Who asked for this payment?",
+  "Was the recipient checked independently?",
+  "Any rush or secrecy?",
 ];
 
 /**
