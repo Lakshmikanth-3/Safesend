@@ -6,8 +6,6 @@
 
 Web3 for Social Good 2026 (SMU × GSR Foundation × UMA) · **Tech Track** · Monad testnet (chain 10143)
 
-> **Built on open source.** SafeSend extends [Companion](https://github.com/SamuelDharshi/Companion) (MIT licence), reusing its vault, payment-hold and guardian-passkey design. New in SafeSend: the Singapore scam-prevention focus, rolling total limits, backup guardian, plain-language warnings, the payment-purpose question, honest onchain reports, the guided guardian review, AI guidance with evaluation, the elder-friendly UI, and serverless hosting.
-
 **The golden rule:** fixed smart-contract rules and authorised people decide. AI only explains and guides. AI can never move money.
 
 ---
@@ -224,4 +222,4 @@ A real recording of the app on Monad testnet, two phones (Mdm Tan and Wei Ming):
 
 ## 10. Licence
 
-MIT. See [`LICENSE`](LICENSE). Builds on [Companion](https://github.com/SamuelDharshi/Companion) by Samuel Dharshi (MIT).
+MIT. See [`LICENSE`](LICENSE).
