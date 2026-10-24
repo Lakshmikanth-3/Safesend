@@ -347,7 +347,7 @@ type FamilyNames = { studentName?: string; guardianName?: string };
 /** The page a parent gets when the student quietly raises the alarm. */
 function sosAlert(familyId: string, studentName: string, time: string, room?: string, demand?: string) {
   const ask = demand ? ` They are asking for ${DEMAND_LABEL[demand] ?? "money"}.` : "";
-  const call = room ? ` Video call: https://meet.jit.si/companion-${room}` : "";
+  const call = room ? ` Video call: https://meet.jit.si/safesend-${room}` : "";
   return {
     title: `${studentName} pressed SOS`,
     titleTa: "",

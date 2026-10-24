@@ -74,7 +74,7 @@ app.addHook("onSend", async () => {
   await store.settle();
 });
 // Turns a phone number or email into a payee address. Secret, so an address reveals nothing about the person.
-const payeeSalt = (env.PAYEE_SALT ?? keccak256(stringToBytes(`${env.RELAYER_PRIVATE_KEY}companion/payee-salt`))) as Hex;
+const payeeSalt = (env.PAYEE_SALT ?? keccak256(stringToBytes(`${env.RELAYER_PRIVATE_KEY}safesend/payee-salt`))) as Hex;
 const vault = new VaultService(chain, deployment, (familyId) =>
   store.scheduledPayees(String(familyId)),
 );

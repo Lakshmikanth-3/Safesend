@@ -59,6 +59,6 @@ export function maskContact(contact: NormalizedContact): string {
 
 /** The testnet address for a contact. `salt` is the relayer's secret; the same salt always gives the same address. */
 export function payeeAddress(salt: Hex, contact: NormalizedContact): Address {
-  const hash = keccak256(concat([hexToBytes(salt), stringToBytes(`companion/payee/v1:${contact.kind}:${contact.value}`)]));
+  const hash = keccak256(concat([hexToBytes(salt), stringToBytes(`safesend/payee/v1:${contact.kind}:${contact.value}`)]));
   return getAddress(`0x${hash.slice(-40)}`);
 }

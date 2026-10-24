@@ -231,7 +231,7 @@ export async function sendMoneyNow(options: {
 export { SessionExpiredError };
 
 /** Where the family's video call happens. The room name is random, so only they have it. */
-export const videoCallUrl = (room: string) => `https://meet.jit.si/companion-${room}`;
+export const videoCallUrl = (room: string) => `https://meet.jit.si/safesend-${room}`;
 
 /** Tells the parent what the caller is asking for. Optional, and only after an SOS. */
 export async function addSosDetail(familyId: string, demand: DemandKind): Promise<void> {
