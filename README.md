@@ -78,14 +78,14 @@ Will the contract pause this?
 
 ### Guidance for the guardian (AI only explains)
 
-The guardian sees one or two short sentences on what the evidence shows and what is uncertain, plus one question fitted to the stated purpose. It comes from a free AI model (`openai/gpt-oss-120b` on Groq, any OpenAI-compatible API works) when one is configured, and from fixed rules otherwise. The screen always says which. The pause has already happened before the guidance runs, and the guidance cannot change it. Evaluation on 10 scenarios ([`docs/ai-evaluation.md`](docs/ai-evaluation.md)):
+The guardian sees one or two short sentences on what the evidence shows and what is uncertain, plus one question fitted to the stated purpose. It comes from a free AI model (`openai/gpt-oss-120b` on Groq, any OpenAI-compatible API works) when one is configured, and from fixed rules otherwise. The screen always says which. The pause has already happened before the guidance runs, and the guidance cannot change it. Evaluation on 20 scenarios ([`docs/ai-evaluation.md`](docs/ai-evaluation.md)): 10 used once to tune the AI prompt, and 10 fresh ones written afterwards and never used for tuning.
 
-| Guidance | Scams warned | False alarms on genuine payments |
-|---|---|---|
-| Fixed rules (fallback) | 5 / 5 | 1 / 5 |
-| AI (gpt-oss-120b, free on Groq) | 5 / 5, with higher confidence | 0 / 5 |
+| Guidance | Scams warned (all 20) | False alarms (all 20) | Scams warned (fresh 10 only) |
+|---|---|---|---|
+| Fixed rules (fallback) | 7 / 10 | 3 / 10 | 2 / 5 |
+| AI (gpt-oss-120b, free on Groq) | **10 / 10** | 3 / 10 | **5 / 5** |
 
-The prompt was adjusted once after the first AI run (3 false alarms), so fresh scenarios are needed to confirm the gain.
+The AI catches every scam, including ones with no obvious keywords (a dating-app "friend", unlocking game winnings, a "son" on a new number), which the rules miss. Both still raise false alarms on genuine payments that mention police or banks. The guardian makes the final decision either way.
 
 ### Guardian settings
 
@@ -99,7 +99,7 @@ Sometimes the person pressuring an older adult is family. SafeSend limits what a
 
 - A guardian can only **stop or approve** a payment the protected user started. They can never move money, send it anywhere, or change the recipient. The contract enforces this.
 - **Stop always returns the money to the protected user**, never to the guardian.
-- The protected user can add a **backup guardian**, so one person is never the only check.
+- A **backup guardian** can be added, so one person is never the only check. (Letting the protected user choose the backup themselves is planned.)
 - **No answer means the money comes back** to the protected user, so a guardian cannot trap funds by staying silent.
 - Every decision is a public onchain event, so it can be reviewed later.
 
@@ -209,7 +209,7 @@ A real recording of the app on Monad testnet, two phones (Mdm Tan and Wei Ming):
 ## 9. Known limits
 
 - Reports come only from SafeSend guardians who stopped a payment. Chainabuse's free API allows 10 lookups a month, so a real integration needs partner access; see [`docs/chainabuse.md`](docs/chainabuse.md).
-- The AI evaluation uses 10 hand-written scenarios and the prompt was tuned once on them; testing with real users is planned for refinement.
+- The AI evaluation uses 20 hand-written scenarios (10 fresh). False alarms on genuine payments that mention police or banks remain; testing with real users is planned for refinement.
 - A backup guardian who clears their phone must be invited again; "restore with Face ID" only finds main guardians and protected users.
 - Testnet only, with stand-in dollars.
 - On serverless hosting, an unanswered pause is refunded when someone opens it or by the daily cron, not to the exact minute.
