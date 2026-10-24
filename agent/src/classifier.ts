@@ -206,7 +206,7 @@ export function describeSituation(input: ClassifierInput): string {
     `That is about ${input.amountVsUsual.toFixed(1)}x their usual weekly amount.`,
     `It is ${input.localHour}:00 local time.`,
     input.networkFlagCount > 0
-      ? `There ${input.networkFlagCount === 1 ? "is 1 report" : `are ${input.networkFlagCount} reports`} about this recipient from other SafeSend families. They are unverified.`
+      ? `There ${input.networkFlagCount === 1 ? "is 1 report" : `are ${input.networkFlagCount} reports`} about this recipient. Each comes from a SafeSend guardian who stopped a real payment to them, but a report is still not proof.`
       : "No reports were found about this recipient. That does not mean it is safe.",
   ];
   if (input.callDurationMinutes != null) {
