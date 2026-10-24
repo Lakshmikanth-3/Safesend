@@ -201,17 +201,14 @@ export function ruleBasedClassification(input: ClassifierInput): Classification 
     evidence.push(`there ${input.networkFlagCount === 1 ? "is 1 unverified report" : `are ${input.networkFlagCount} unverified reports`} about the recipient`);
   }
   const shows = evidence.length > 0 ? joinList(evidence) : "nothing stands out beyond the pause rule";
-  const uncertain =
-    input.networkFlagCount > 0
-      ? "Reports can be wrong, so check with them before deciding."
-      : "No reports were found, but that does not mean the recipient is safe.";
+  const uncertain = input.networkFlagCount > 0 ? "Reports can be wrong." : "No reports is not proof it is safe.";
 
   const named = SCRIPT_PHRASE[scriptId];
   const explanation_en = named
-    ? `This looks like ${named}: ${shows}. ${adviceFor(scriptId)} ${uncertain}`
+    ? `Looks like ${named}. ${adviceFor(scriptId)} ${uncertain}`
     : askedBySomeone
-      ? `They say someone asked them to send this, and ${shows}. Banks, police and government officers never ask anyone to move money to keep it safe. ${uncertain}`
-      : `Paused because ${shows}. It may well be fine. ${uncertain}`;
+      ? `Someone asked for this payment, the most common scam sign. ${uncertain}`
+      : `Paused because ${shows}. It may be fine. ${uncertain}`;
 
   return {
     scriptId,
@@ -239,15 +236,15 @@ function joinList(items: string[]): string {
 function adviceFor(scriptId: number): string {
   switch (scriptId) {
     case SCAM_SCRIPT.FAKE_IMMIGRATION_OFFICER:
-      return "Government officers never ask anyone to transfer money by phone or message.";
+      return "Officers never ask for transfers.";
     case SCAM_SCRIPT.DIGITAL_ARREST:
-      return "Banks never ask customers to move money to a \"safe account\".";
+      return "Banks never use \"safe accounts\".";
     case SCAM_SCRIPT.VOICE_CLONE_ARREST:
-      return "Call the family member on the number you already have, not the new one.";
+      return "Call their old number.";
     case SCAM_SCRIPT.JOB_TASK:
-      return "A real job never asks you to pay to start or to move money for someone else.";
+      return "Real jobs never ask you to pay.";
     case SCAM_SCRIPT.INVESTMENT:
-      return "Guaranteed or unusually high returns are the most common sign of a fake investment.";
+      return "Guaranteed returns are a red flag.";
     default:
       return "";
   }
@@ -255,27 +252,28 @@ function adviceFor(scriptId: number): string {
 
 /** The one question to ask, fitted to the scam type and the stated purpose. */
 function questionFor(scriptId: number, purpose: string | undefined): string {
+  // Short on purpose: the guardian reads this on a phone, often in a hurry.
   switch (scriptId) {
     case SCAM_SCRIPT.FAKE_IMMIGRATION_OFFICER:
     case SCAM_SCRIPT.DIGITAL_ARREST:
-      return "Who exactly asked for this, and did they tell you to keep it secret or stay on the line?";
+      return "Who asked, and did they say to keep it secret?";
     case SCAM_SCRIPT.VOICE_CLONE_ARREST:
-      return "Have you spoken to this person on their old number, or seen them on video?";
+      return "Did you reach them on their old number?";
     case SCAM_SCRIPT.JOB_TASK:
-      return "Why does this job need you to pay first, and have you met anyone from the company?";
+      return "Why must you pay first for this job?";
     case SCAM_SCRIPT.INVESTMENT:
-      return "How did you hear about this investment, and what return were you promised?";
+      return "Who told you about it, and what return was promised?";
   }
   switch (purpose) {
     case "Someone asked me to":
-      return "Who asked you to send this, how did they contact you, and did they say to keep it quiet?";
+      return "Who asked, and how did they contact you?";
     case "Bills":
-      return "Which bill is this, and did the payment details come from a real letter or the official website?";
+      return "Do the details match a real bill?";
     case "Family":
-      return "Did this family member ask you in person or on their usual number?";
+      return "Did they ask on their usual number?";
     case "Shopping":
-      return "Which shop is this, and did you find it yourself or did someone send you a link?";
+      return "Did you find this shop yourself?";
     default:
-      return "What is this payment for, and who gave you the payment details?";
+      return "Who gave you these payment details?";
   }
 }
