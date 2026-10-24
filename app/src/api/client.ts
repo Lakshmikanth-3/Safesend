@@ -67,13 +67,14 @@ async function requestOnce<T>(base: string, path: string, init?: RequestInit): P
         "ngrok-skip-browser-warning": "true",
         ...(init?.headers ?? {}),
       },
-      signal: AbortSignal.timeout(20_000),
+      // A write waits for the chain, which on a busy testnet can take well over 20 seconds.
+      signal: AbortSignal.timeout(init?.method === "POST" ? 90_000 : 20_000),
     });
   } catch (error) {
     // A network failure here is the most likely thing to go wrong in a live demo, so the
     // message says what to check rather than leaking a stack trace to a parent.
     throw new ApiError(
-      `Cannot reach Companion's server at ${base}. Check it is running and reachable from this device.`,
+      `Cannot reach SafeSend's server at ${base}. Check it is running and reachable from this device.`,
       0,
     );
   }

@@ -328,7 +328,7 @@ export default function HoldScreen() {
       {/* 5. Call, using only the number saved at setup. */}
       {phone ? (
         <SecondaryButton
-          label={`Call ${studentName} (${phone})`}
+          label={family?.studentName ? `Call ${family.studentName} (${phone})` : `Call (${phone})`}
           onPress={() => void Linking.openURL(`tel:${phone.replace(/[^\d+]/g, "")}`)}
         />
       ) : (
@@ -371,7 +371,7 @@ export default function HoldScreen() {
       {actionError ? <ErrorNote message={actionError} /> : null}
 
       <Proof>
-        {t("receiptNumber", lang)} #{hold.holdId} · {hold.reasonName}
+        {t("receiptNumber", lang)} #{hold.holdId}
       </Proof>
     </Screen>
   );
