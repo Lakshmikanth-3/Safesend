@@ -1,3 +1,5 @@
+<p align="center"><img src="app/app/logo.png" alt="SafeSend. Lock. Review. Send." width="180"></p>
+
 # SafeSend
 
 **SafeSend makes crypto transfers safer for people who are new to crypto, especially older adults and young people in Singapore.** It combines checks on who you are paying, payment pauses you can configure, and a simple review by a trusted family member.
@@ -59,22 +61,22 @@ Will the contract pause this?
 
 | Rule | What the user reads | Contract reason |
 |---|---|---|
-| The recipient has been reported | "Other people have reported this recipient (2 reports). Reports can be wrong, so your guardian checks." | `NETWORK_FLAG` |
-| The recipient is new | "You have not sent money to this person before." | `NEW_PAYEE` |
-| One payment is over the limit | "This is more than the $1,000 limit your guardian set for one payment." | `OVER_CAP` |
-| Payments in a day or week add up past the total limit | "Together with your other payments recently, this goes over the total your guardian set." | `OVER_PERIOD_LIMIT` |
+| The recipient has been reported | "Reported by others (2). Reports can be wrong." | `NETWORK_FLAG` |
+| The recipient is new | "New recipient." | `NEW_PAYEE` |
+| One payment is over the limit | "Over your $1,000 limit." | `OVER_CAP` |
+| Payments in a day or week add up past the total limit | "Over your total limit for now." | `OVER_PERIOD_LIMIT` |
 
 ### Reports, shown honestly
 
-- Every report shows **where it came from**, **when**, and whether it is **verified or unverified**.
-- Counts read like "2 reports (1 verified, 1 unverified)", never "scam".
+- Reports are **real and onchain**. A guardian can only report a recipient after actually stopping a payment to them, with their own Face ID, so every report is tied to a real stopped payment (shown as **verified**).
+- Every report shows **where it came from** and **when**. Counts read like "2 reports (2 verified)", never "scam".
 - No reports shows **"No reports found"**, never "safe".
-- Every report has a **"Wrong report? Request correction"** link.
-- Demo reports are labelled **Sample data** on screen (any contact ending in `4567`).
+- Every report has a **"Wrong report? Ask to correct"** link, and the reported party can attach a public rebuttal onchain.
+- Reports are permanent by design: nobody, including us, can quietly erase evidence about a scammer.
 
 ### Guidance for the guardian (AI only explains)
 
-The guardian sees two or three sentences on what the evidence shows and what is uncertain, plus one question fitted to the stated purpose. It comes from an AI model when an `ANTHROPIC_API_KEY` is set, and from fixed rules otherwise. The screen always says which. The pause has already happened before the guidance runs, and the guidance cannot change it. Evaluation: [`docs/ai-evaluation.md`](docs/ai-evaluation.md).
+The guardian sees one or two short sentences on what the evidence shows and what is uncertain, plus one question fitted to the stated purpose. It comes from an AI model when an `ANTHROPIC_API_KEY` is set, and from fixed rules otherwise. The screen always says which. The pause has already happened before the guidance runs, and the guidance cannot change it. Evaluation: [`docs/ai-evaluation.md`](docs/ai-evaluation.md).
 
 ### Guardian settings
 
@@ -122,7 +124,7 @@ SafeSend could not keep its main promise with an ordinary app and database:
 - *Crypto is still unfamiliar to many seniors:* plain words, large text, and the family doing the checking.
 - *Partnerships:* links with ScamShield and banks would need agreements we do not have yet.
 
-## 6. Running it
+## 6. Running it locally
 
 Needs Node 22+, pnpm 9+ and [Foundry](https://getfoundry.sh).
 
@@ -145,7 +147,9 @@ pnpm e2e:testnet                         # the same journey on Monad testnet (ne
 pnpm --filter @thunai/agent evaluate     # regenerates docs/ai-evaluation.md
 ```
 
-## 7. Deployment (Monad testnet)
+## 7. Deployment
+
+### Contracts (Monad testnet, chain 10143)
 
 | Contract | Address |
 |---|---|
@@ -154,16 +158,27 @@ pnpm --filter @thunai/agent evaluate     # regenerates docs/ai-evaluation.md
 | Stand-in deposit token (tCTK) | `0x2ad2937e2354A17deA0d3B35390091887C83e134` |
 | Stand-in dollar (tAUSD) | `0x20CadD06815C0a4c261C61A0DE03c6ccD004923C` |
 
-To deploy your own:
+To deploy your own: set `RELAYER_ADDRESS` and `AGENT_ADDRESS` in `.env` first (or both roles default to the deployer), run `pnpm contracts:deploy`, then mint tCTK to the relayer and tAUSD to the vault as backing. Both tokens are testnet stand-ins with open minting.
 
-1. Set `RELAYER_ADDRESS` and `AGENT_ADDRESS` in `.env` first, or both roles default to the deployer.
-2. `pnpm contracts:deploy` writes `contracts/deployments/10143.json`, which every service reads.
-3. The deploy mints the stand-in float to the deployer. Mint tCTK to the relayer (for the testnet "add money" stand-in) and tAUSD to the vault as backing. Both tokens are labelled testnet stand-ins with open minting.
-4. Set `THUNAI_START_BLOCK` to the deploy block and restart `pnpm dev`.
+### Website and servers (all on Vercel)
+
+| Part | Vercel project | How |
+|---|---|---|
+| Landing page, with the app at `/app` | `safesend` | `node scripts/build-web.mjs`, then `cd frontend && vercel deploy --prod` |
+| Relayer and agent, as one serverless function | `safesend-api` | `node scripts/build-api-vercel.mjs`, then `cd .vercel-api && vercel deploy --prod` |
+
+- The website forwards `/relayer/*` and `/agent/*` to `safesend-api` (`RELAYER_URL` and `AGENT_URL` on the `safesend` project), so the app, its servers and its passkeys share one origin.
+- Server state (display names, invites, alert briefs) lives in **Vercel Blob**. The money, passkeys and rules live on the chain.
+- Serverless has no background timer, so an unanswered pause is refunded **as soon as anyone opens it**, and a **Vercel Cron** job sweeps once a day.
+- Secrets are Vercel environment variables. The deployer key is never uploaded.
 
 Contract and package names (`ThunaiVault`, `ScamSignals`, `@thunai/*`) are kept on purpose: renaming them would change the signing domain, every passkey challenge and the deployment files. See [`docs/safesend-map.md`](docs/safesend-map.md).
 
-## 8. Demo script (about 3 minutes)
+## 8. Demo video
+
+A real recording of the app on Monad testnet, two phones (Mdm Tan and Wei Ming): signup, rules, the scam paused with verified reports, the guided review, Stop, a genuine gift approved, Silent SOS, Details, and Forget this device.
+
+### Demo script (about 3 minutes)
 
 1. **Problem (30s):** S$410.6M lost in H1 2026; S$65.5M from crypto wallets; elderly lose most; crypto cannot be reversed.
 2. **Setup (20s):** Wei Ming becomes Mdm Tan's guardian, saves her phone number, sets a weekly total limit and adds a backup guardian.
@@ -174,10 +189,11 @@ Contract and package names (`ThunaiVault`, `ScamSignals`, `@thunai/*`) are kept 
 
 ## 9. Known limits
 
-- Reports come from SafeSend families plus labelled samples. A real external source (for example Chainabuse) depends on data access and is not connected.
+- Reports come only from SafeSend guardians who stopped a payment. An external source (for example Chainabuse) depends on data access and is not connected yet.
 - The AI column of the evaluation is empty until an `ANTHROPIC_API_KEY` is set. The rule-based fallback warned on 5/5 scam scenarios and gave 1 false alarm in 5 genuine ones.
 - A backup guardian who clears their phone must be invited again; "restore with Face ID" only finds main guardians and protected users.
 - Testnet only, with stand-in dollars.
+- On serverless hosting, an unanswered pause is refunded when someone opens it or by the daily cron, not to the exact minute.
 
 ## 10. Licence
 
