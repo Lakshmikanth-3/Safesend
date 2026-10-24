@@ -6,6 +6,7 @@
 
 Web3 for Social Good 2026 (SMU × GSR Foundation × UMA) · **Tech Track** · Monad testnet (chain 10143)
 
+**🌐 Live app:** [https://safesend-sg.vercel.app](https://safesend-sg.vercel.app) (testnet, test money)  
 **▶ Demo video:** [https://youtu.be/SuMC1kGFgkk](https://youtu.be/SuMC1kGFgkk)
 
 **The golden rule:** fixed smart-contract rules and authorised people decide. AI only explains and guides. AI can never move money.
