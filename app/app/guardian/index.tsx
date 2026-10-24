@@ -110,16 +110,26 @@ export default function GuardianHome() {
       {/* The status pill: the one thing she reads first. */}
       <Card
         tone={
-          checkPending
-            ? { bg: colors.heldSoft, accent: colors.held }
-            : { bg: colors.arrivedSoft, accent: colors.arrived }
+          family?.frozen
+            ? { bg: colors.scamSoft, accent: colors.scam }
+            : checkPending
+              ? { bg: colors.heldSoft, accent: colors.held }
+              : { bg: colors.arrivedSoft, accent: colors.arrived }
         }
       >
-        <Title>{checkPending ? t("checkingOnStudent", "en", { name: studentName }) : t("allGood", "en")}</Title>
+        <Title>
+          {family?.frozen
+            ? t("studentNeedsYou", "en", { name: studentName })
+            : checkPending
+              ? t("checkingOnStudent", "en", { name: studentName })
+              : t("allGood", "en")}
+        </Title>
         <Body muted>
-          {checkPending
-            ? t("noReplyYet", lang)
-            : t("allGoodSub", lang, { name: studentName })}
+          {family?.frozen
+            ? "Payments are paused. See below."
+            : checkPending
+              ? t("noReplyYet", lang)
+              : t("allGoodSub", lang, { name: studentName })}
         </Body>
       </Card>
 
