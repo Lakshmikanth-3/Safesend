@@ -114,11 +114,11 @@ export default function Envelope() {
           busy={busy}
         />
         <Small>
-          You sign this once. After that the allowance runs by itself, and we only ask you
+          You sign this once. After that top-ups run by themselves, and we only ask you
           about things outside these rules.
         </Small>
         {latency ? (
-          <TrustSeal label={t("signedBy", "en", { name: "you" })} detail={`verified onchain · ${latency}ms`} />
+          <TrustSeal label={t("signedBy", "en", { name: "you" })} detail={`checked by the contract · ${latency}ms`} />
         ) : null}
         <Proof>Your approval is checked by the contract, not by our server.</Proof>
       </Card>

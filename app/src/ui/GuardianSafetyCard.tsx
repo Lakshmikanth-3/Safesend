@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Platform, Pressable, Share, Text, TextInput, View } from "react-native";
-import { formatAusd } from "@thunai/shared";
+import { formatUsd } from "@thunai/shared";
 import { Body, Card, Divider, ErrorNote, Field, Heading, Proof, SecondaryButton, Small, TrustButton, styles as ui } from "@/ui/components";
 import { colors, radius, space, type as type_ } from "@/theme";
 import type { FamilyState } from "@/api/client";
@@ -51,7 +51,7 @@ export default function GuardianSafetyCard({
 
   const current =
     limit && limit.periodLimit !== "0"
-      ? `${formatAusd(BigInt(limit.periodLimit))} every ${limit.period === "86400" ? "day" : `${Math.round(Number(limit.period) / 86400)} days`}. Used so far: ${formatAusd(BigInt(limit.spent))}.`
+      ? `${formatUsd(BigInt(limit.periodLimit))} every ${limit.period === "86400" ? "day" : `${Math.round(Number(limit.period) / 86400)} days`}. Used so far: ${formatUsd(BigInt(limit.spent))}.`
       : "No total limit yet.";
 
   return (

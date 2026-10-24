@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Linking, Pressable, View } from "react-native";
 import { useRouter } from "expo-router";
-import { formatAusd, formatUsd, toUnits } from "@thunai/shared";
+import { formatUsd, toUnits } from "@thunai/shared";
 import {
   Amount,
   Body,
@@ -85,7 +85,7 @@ export default function GuardianHome() {
       const weekly = family.env.weeklyAmount !== "0" ? Number(family.env.weeklyAmount) / 1e6 : 150;
       const result = await sendMoneyNow({ familyId: device.familyId, amountUsd: weekly });
       setNote(
-        `Added ${formatAusd(toUnits(weekly))} for ${studentName}. It arrived in ${(result.latencyMs / 1000).toFixed(1)}s.`,
+        `Added ${formatUsd(toUnits(weekly))} for ${studentName}. It arrived in ${(result.latencyMs / 1000).toFixed(1)}s.`,
       );
       refresh();
     } catch (cause) {
@@ -132,7 +132,7 @@ export default function GuardianHome() {
           pulse={checkPending}
           caption={
             family && family.balance !== "0"
-              ? `${studentName} has ${formatAusd(BigInt(family.balance))} available`
+              ? `${studentName} has ${formatUsd(BigInt(family.balance))} available`
               : undefined
           }
         />

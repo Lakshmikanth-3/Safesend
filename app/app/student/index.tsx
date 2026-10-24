@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { Pressable, View } from "react-native";
 import { useRouter } from "expo-router";
-import { formatAusd, formatUsd, HOLD_STATUS } from "@thunai/shared";
+import { formatUsd, HOLD_STATUS } from "@thunai/shared";
 import {
   Amount,
   Body,
@@ -61,7 +61,7 @@ export default function StudentHome() {
 
       <Card>
         <Small>{t("balance", lang)}</Small>
-        <Amount>{family ? formatAusd(BigInt(family.balance)) : "—"}</Amount>
+        <Amount>{family ? formatUsd(BigInt(family.balance)) : "—"}</Amount>
         <Small>Test money for this demo. Payments to new people, reported people or above your limits are paused for your guardian to check.</Small>
         {family?.frozen ? (
           <Pill label={t("heldFrozen", lang)} tone="trust" icon="⏸" />

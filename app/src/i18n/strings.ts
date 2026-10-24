@@ -57,8 +57,8 @@ export const strings = {
     en: "Every week {weekly} · Anything over {cap}, or to anyone new, asks me first",
   },
   envelopeSign: { en: "Approve once with Face ID" },
-  weeklyAmount: { en: "Every week" },
-  askMeAbove: { en: "Ask me above" },
+  weeklyAmount: { en: "Weekly top-up" },
+  askMeAbove: { en: "Ask me for any single payment above" },
 
   // ------------------------------------------------- protected user home
   balance: { en: "Available" },

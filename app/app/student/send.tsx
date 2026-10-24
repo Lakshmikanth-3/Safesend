@@ -25,7 +25,7 @@ import { t } from "@/i18n/strings";
 import { useFamily } from "@/hooks/useThunai";
 import { SessionExpiredError, sendMoney } from "@/actions/money";
 import { api } from "@/api/client";
-import { formatAusd, normalizeContact, toUnits } from "@thunai/shared";
+import { formatUsd, normalizeContact, toUnits } from "@thunai/shared";
 import SessionPrompt from "@/ui/SessionPrompt";
 import { useDeviceState } from "@/state/store";
 import type { Address } from "viem";
@@ -126,7 +126,7 @@ export default function Send() {
     newRecipient: payee ? !payee.scheduled : false,
     reportCount: reports.length,
     overSingleLimit,
-    limitLabel: capUnits > 0n ? formatAusd(capUnits) : undefined,
+    limitLabel: capUnits > 0n ? formatUsd(capUnits) : undefined,
   });
   // A prediction for the warning screen only. The contract makes the real decision.
   const willPause = !payee?.scheduled || reports.length > 0 || overSingleLimit;
@@ -154,7 +154,7 @@ export default function Send() {
     // Say it plainly before the contract does: it refuses a payment larger than the balance.
     if (family && toUnits(amountNumber) > BigInt(family.balance)) {
       setError(
-        `You have ${formatAusd(BigInt(family.balance))}. Ask ${guardianName} to add money first, or send a smaller amount.`,
+        `You have ${formatUsd(BigInt(family.balance))}. Ask ${guardianName} to add money first, or send a smaller amount.`,
       );
       return false;
     }
@@ -197,7 +197,7 @@ export default function Send() {
         <Card tone={{ bg: colors.heldSoft, accent: colors.held }}>
           <Title>Let us check this first</Title>
           <Body>
-            You are sending {formatAusd(toUnits(amountNumber))} to {payee.label}.
+            You are sending {formatUsd(toUnits(amountNumber))} to {payee.label}.
           </Body>
           <Heading>Why it was paused</Heading>
           <Bullets items={reasons} />
@@ -371,7 +371,7 @@ export default function Send() {
       {error ? <ErrorNote message={error} /> : null}
 
       <SecondaryButton label={t("cancel", lang)} onPress={() => router.back()} />
-      <Proof>Available: {family ? formatAusd(BigInt(family.balance)) : "—"}</Proof>
+      <Proof>Available: {family ? formatUsd(BigInt(family.balance)) : "—"}</Proof>
     </Screen>
   );
 }

@@ -36,7 +36,7 @@ export default function LatencyCard() {
           : "Make a payment to see how fast it is. Bank times are typical, not measured."}
       </Small>
       {config && !config.agoraEnabled ? (
-        <Small>Settlement: pre-funded fallback while Agora whitelisting is pending.</Small>
+        <Small>Test money on Monad testnet. No real money is used.</Small>
       ) : null}
     </Card>
   );
