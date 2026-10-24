@@ -95,6 +95,8 @@ contract ThunaiVault is EIP712 {
     uint8 internal constant STATUS_RELEASED = 2;
     uint8 internal constant STATUS_CANCELLED = 3;
     uint8 internal constant STATUS_EXPIRED = 4;
+    /// @dev SafeSend: approved by a guardian, waiting out the cooling-off period before it pays.
+    uint8 internal constant STATUS_APPROVED = 5;
 
     // Action-hash domains, bound into every passkey challenge.
     bytes32 internal constant KIND_ENVELOPE = keccak256("thunai.envelope");
@@ -102,6 +104,7 @@ contract ThunaiVault is EIP712 {
     bytes32 internal constant KIND_LIVENESS = keccak256("thunai.proveLiveness");
     bytes32 internal constant KIND_UNFREEZE = keccak256("thunai.unfreeze");
     bytes32 internal constant KIND_FREEZE = keccak256("thunai.freeze");
+    bytes32 internal constant KIND_SENDER_CANCEL = keccak256("safesend.senderCancel");
     bytes32 internal constant KIND_NOTES = keccak256("thunai.notes");
     bytes32 internal constant KIND_SPEND_LIMIT = keccak256("safesend.spendLimit");
     bytes32 internal constant KIND_BACKUP_GUARDIAN = keccak256("safesend.backupGuardian");
@@ -160,6 +163,11 @@ contract ThunaiVault is EIP712 {
     /// @dev How many times a student has raised Silent SOS, for the public count.
     uint256 public sosCount;
 
+    /// @dev SafeSend: how long an approved payment waits before it pays. During this time the
+    ///      protected user can still cancel, so an approval obtained under pressure can be undone.
+    ///      Zero pays at once.
+    uint64 public coolOff;
+
     /// @dev SafeSend: a rolling total limit, on top of the single-payment cap. Kept out of
     ///      the Envelope struct so the envelope's signed encoding (and every client of it)
     ///      stays unchanged. `periodLimit == 0` means no total limit.
@@ -199,6 +207,9 @@ contract ThunaiVault is EIP712 {
     );
     event HoldResolved(uint256 indexed holdId, uint256 indexed familyId, bool released, uint64 secondsToResolve);
     event HoldExpired(uint256 indexed holdId, uint256 indexed familyId, uint128 amount);
+    event HoldApproved(uint256 indexed holdId, uint256 indexed familyId, uint64 paysAt);
+    event HoldCancelledBySender(uint256 indexed holdId, uint256 indexed familyId, uint128 amount);
+    event CoolOffSet(uint64 seconds_);
     event Withdrawn(uint256 indexed familyId, address indexed to, uint128 amount, bytes32 memoHash);
     event CheckRequested(uint256 indexed familyId, uint64 nonce, uint64 requestedAt);
     event LivenessProved(uint256 indexed familyId, uint64 nonce, uint64 timestamp, uint64 latencySeconds);
@@ -588,9 +599,18 @@ contract ThunaiVault is EIP712 {
         bytes32 actionHash = _actionHash(h.familyId, KIND_RESOLVE, keccak256(abi.encode(holdId, release)));
         _consumeResolverAssertion(h.familyId, f, actionHash, auth);
 
-        h.status = release ? STATUS_RELEASED : STATUS_CANCELLED;
         uint64 took = uint64(block.timestamp) - h.openedAt;
 
+        // With a cooling-off period, an approval only schedules the payment.
+        if (release && coolOff > 0) {
+            h.status = STATUS_APPROVED;
+            h.releaseAt = uint64(block.timestamp) + coolOff;
+            emit HoldApproved(holdId, h.familyId, h.releaseAt);
+            emit HoldResolved(holdId, h.familyId, true, took);
+            return;
+        }
+
+        h.status = release ? STATUS_RELEASED : STATUS_CANCELLED;
         if (release) {
             _recordSpend(h.familyId, h.amount);
             ausdLiabilities -= h.amount;
@@ -612,6 +632,41 @@ contract ThunaiVault is EIP712 {
         h.status = STATUS_EXPIRED;
         _families[h.familyId].balance += h.amount;
         emit HoldExpired(holdId, h.familyId, h.amount);
+    }
+
+    /// @notice Pays an approved payment once its cooling-off period is over. Anyone may call it:
+    ///         the guardian already approved, and the protected user did not cancel in time.
+    function executeRelease(uint256 holdId) external {
+        Hold storage h = _holds[holdId];
+        if (h.status != STATUS_APPROVED) revert HoldNotOpen();
+        if (block.timestamp < h.releaseAt) revert HoldNotExpired();
+        h.status = STATUS_RELEASED;
+        _recordSpend(h.familyId, h.amount);
+        ausdLiabilities -= h.amount;
+        address(ausd).safeTransfer(h.to, h.amount);
+        emit Withdrawn(h.familyId, h.to, h.amount, h.memoHash);
+    }
+
+    /// @notice The protected user cancels their own paused (or approved, still cooling off)
+    ///         payment. It can only ever return the money to them, so it is always safe to allow,
+    ///         even under pressure. Signed by the user's own account key.
+    function cancelBySender(uint256 holdId, bytes calldata senderSig) external {
+        Hold storage h = _holds[holdId];
+        if (h.status != STATUS_OPEN && h.status != STATUS_APPROVED) revert HoldNotOpen();
+        Family storage f = _families[h.familyId];
+        if (ECDSA.recoverCalldata(senderCancelDigest(holdId), senderSig) != f.studentAcct) revert BadSignature();
+        h.status = STATUS_CANCELLED;
+        f.balance += h.amount;
+        emit HoldCancelledBySender(holdId, h.familyId, h.amount);
+    }
+
+    function senderCancelDigest(uint256 holdId) public view returns (bytes32) {
+        return _hashTypedData(keccak256(abi.encode(KIND_SENDER_CANCEL, holdId)));
+    }
+
+    function setCoolOff(uint64 seconds_) external onlyOwner {
+        coolOff = seconds_;
+        emit CoolOffSet(seconds_);
     }
 
     // --------------------------------------------------- check on the child
