@@ -16,8 +16,6 @@ import {
   TrustButton,
 } from "@/ui/components";
 import { colors, space } from "@/theme";
-import AlertsCard from "@/ui/AlertsCard";
-import LatencyCard from "@/ui/LatencyCard";
 import { t } from "@/i18n/strings";
 import { useFamily } from "@/hooks/useThunai";
 import { useDeviceState } from "@/state/store";
@@ -62,7 +60,6 @@ export default function StudentHome() {
       <Card>
         <Small>{t("balance", lang)}</Small>
         <Amount>{family ? formatUsd(BigInt(family.balance)) : "—"}</Amount>
-        <Small>Test money for this demo. Payments to new people, reported people or above your limits are paused for your guardian to check.</Small>
         {family?.frozen ? (
           <Pill label={t("heldFrozen", lang)} tone="trust" icon="⏸" />
         ) : family?.env.weeklyAmount && family.env.weeklyAmount !== "0" ? (
@@ -87,7 +84,6 @@ export default function StudentHome() {
 
       <TrustButton label={t("sendMoney", lang)} onPress={() => router.push("/student/send")} />
 
-      <AlertsCard />
 
       {family?.payees.some((payee) => payee.scheduled) ? (
         <Card>
@@ -100,7 +96,6 @@ export default function StudentHome() {
                 <Small>{t("paidAutomatically", lang)}</Small>
               </View>
             ))}
-          <Small>These pay straight through, because {guardianName} approved them.</Small>
         </Card>
       ) : null}
 
@@ -124,9 +119,7 @@ export default function StudentHome() {
         )}
       </Card>
 
-      <LatencyCard />
 
-      <SecondaryButton label="Our network" onPress={() => router.push("/network")} />
 
       {/*
         Silent SOS. One tap, no confirmation screen, because the person pressing it may be on
@@ -134,7 +127,6 @@ export default function StudentHome() {
       */}
       <View style={{ gap: space.xs, marginTop: space.md }}>
         <SecondaryButton label="Someone is asking me for money" onPress={() => router.push("/student/sos")} />
-        <Small>Tell your family quietly. Works for gift cards, bank transfers and crypto too.</Small>
       </View>
 
       <SetupCard />

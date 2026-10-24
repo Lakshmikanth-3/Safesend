@@ -19,7 +19,8 @@ import {
   styles as ui,
 } from "@/ui/components";
 import { colors, radius, space, type as type_ } from "@/theme";
-import { PURPOSES, SAFETY_TIP, memoWithPurpose, pauseReasons, riskReports, type Purpose } from "@/safety";
+import { PURPOSES, SAFETY_TIP, memoWithPurpose, pauseReasons, reportCount,
+  riskReports, type Purpose } from "@/safety";
 import { RiskReports } from "@/ui/RiskReports";
 import { t } from "@/i18n/strings";
 import { useFamily } from "@/hooks/useThunai";
@@ -124,12 +125,12 @@ export default function Send() {
   const overSingleLimit = capUnits > 0n && amountOk && toUnits(amountNumber) > capUnits;
   const reasons = pauseReasons({
     newRecipient: payee ? !payee.scheduled : false,
-    reportCount: reports.length,
+    reportCount: reportCount(reports),
     overSingleLimit,
     limitLabel: capUnits > 0n ? formatUsd(capUnits) : undefined,
   });
   // A prediction for the warning screen only. The contract makes the real decision.
-  const willPause = !payee?.scheduled || reports.length > 0 || overSingleLimit;
+  const willPause = !payee?.scheduled || reportCount(reports) > 0 || overSingleLimit;
 
   /** First tap: check the form, then show the warning if this payment will be paused. */
   function review() {
@@ -197,9 +198,8 @@ export default function Send() {
         <Card tone={{ bg: colors.heldSoft, accent: colors.held }}>
           <Title>Let us check this first</Title>
           <Body>
-            You are sending {formatUsd(toUnits(amountNumber))} to {payee.label}.
+            {formatUsd(toUnits(amountNumber))} to {payee.label}
           </Body>
-          <Heading>Why it was paused</Heading>
           <Bullets items={reasons} />
         </Card>
 
@@ -209,10 +209,6 @@ export default function Send() {
 
         <RiskReports reports={reports} subject={payee.label} />
 
-        <Card>
-          <Body>You said this payment is for: {purpose}.</Body>
-          <Small>{guardianName} will see this.</Small>
-        </Card>
 
         <StopButton
           label="Cancel transfer"
@@ -223,12 +219,8 @@ export default function Send() {
           }}
         />
         <SecondaryButton label={`Ask ${guardianName} to check`} onPress={send} busy={busy} />
-        <Small style={{ textAlign: "center" }}>
-          If {guardianName} does not answer, your money comes back to you automatically.
-        </Small>
         {expired ? <SessionPrompt onRenewed={() => setExpired(false)} /> : null}
         {error ? <ErrorNote message={error} /> : null}
-        <SecondaryButton label="Go back and change it" onPress={() => setReviewing(false)} />
       </Screen>
     );
   }
@@ -310,7 +302,7 @@ export default function Send() {
       </Card>
 
       <Card>
-        <Field label="What is this payment for?" hint={`${guardianName} sees your answer if this needs checking.`}>
+        <Field label="What is this payment for?">
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space.sm }}>
             {PURPOSES.map((p) => (
               <Pressable
@@ -333,7 +325,7 @@ export default function Send() {
             ))}
           </View>
         </Field>
-        <Field label="Anything else? (optional)" hint="In your own words.">
+        <Field label="Note (optional)">
           <TextInput
             value={memo}
             onChangeText={setMemo}
@@ -345,7 +337,7 @@ export default function Send() {
           />
         </Field>
 
-        <Field label={t("onACall", lang)} hint={t("onACallHint", lang)}>
+        <Field label={t("onACall", lang)}>
           <TextInput
             value={minutes}
             onChangeText={setMinutes}
@@ -362,8 +354,8 @@ export default function Send() {
       <Card tone={willPayThrough ? { bg: colors.arrivedSoft } : { bg: colors.heldSoft }}>
         <Body>
           {willPayThrough
-            ? `This one pays straight away. ${guardianName} already approved this person.`
-            : `This is someone new, so we will pause it and ask ${guardianName} first.`}
+            ? "Approved person. Pays now."
+            : `New person. ${guardianName} checks first.`}
         </Body>
       </Card>
 

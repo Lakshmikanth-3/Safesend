@@ -20,8 +20,6 @@ import { t } from "@/i18n/strings";
 import { useFamily } from "@/hooks/useThunai";
 import { SessionExpiredError, requestCheck, sendMoneyNow, videoCallUrl } from "@/actions/money";
 import { useDeviceState } from "@/state/store";
-import AlertsCard from "@/ui/AlertsCard";
-import LatencyCard from "@/ui/LatencyCard";
 import SessionPrompt from "@/ui/SessionPrompt";
 import SetupCard from "@/ui/SetupCard";
 import GuardianSafetyCard from "@/ui/GuardianSafetyCard";
@@ -138,7 +136,6 @@ export default function GuardianHome() {
         />
       </Card>
 
-      <AlertsCard />
 
       {/* The main action. Purple, because her passkey is about to be used. */}
       <TrustButton
@@ -146,10 +143,6 @@ export default function GuardianHome() {
         onPress={onCheck}
         busy={busy === "check"}
       />
-      <Small>
-        {t("provesItsReallyThem", lang, { name: studentName })}
-      </Small>
-      <Small>Got a call saying {studentName} is in trouble? Check first. Do not send money to anyone until it shows a confirmation.</Small>
 
       <Card>
         <Small>{t("weeklyAmount", lang)}</Small>
@@ -167,7 +160,6 @@ export default function GuardianHome() {
         {note ? <Small muted={false}>{note}</Small> : null}
       </Card>
 
-      <LatencyCard />
 
       {family?.frozen ? (
         <Card tone={{ bg: colors.trustSoft, accent: colors.trust }}>
@@ -197,7 +189,6 @@ export default function GuardianHome() {
 
       <SetupCard protectedName={studentName} />
 
-      <SecondaryButton label={t("familiesProtected", lang)} onPress={() => router.push("/network")} />
     </Screen>
   );
 }

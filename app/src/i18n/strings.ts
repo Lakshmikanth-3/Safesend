@@ -66,7 +66,7 @@ export const strings = {
   rentAutoPays: { en: "Saved payment goes out {when}" },
   guardianIsYourThunai: { en: "{name} is your guardian" },
   activity: { en: "Activity" },
-  noActivityYet: { en: "Nothing yet. Your payments will show up here." },
+  noActivityYet: { en: "No payments yet." },
   sendMoney: { en: "Send" },
 
   arrivedFromGuardian: { en: "{when} {amount} from {name} arrived" },
@@ -118,7 +118,7 @@ export const strings = {
 
   // ------------------------------------------------- guardian screens
   allGood: { en: "All good" },
-  allGoodSub: { en: "Nothing from {name} is waiting for you." },
+  allGoodSub: { en: "Nothing waiting." },
   lastAllowanceSent: { en: "Last added {when}: {amount}" },
   checkOnStudent: { en: "Check on {name}" },
   sendMoneyNow: { en: "Add money now" },
@@ -157,10 +157,11 @@ export const strings = {
 
   // --------------------------------------------------------- network
   reportThisPayee: { en: "Report this recipient" },
+  reportThisPayeeHeading: { en: "Warn other families" },
   reportThisPayeeBody: {
-    en: "Your report is shown to other SafeSend families as an unverified report. It never blocks anyone on its own.",
+    en: "Others paying this recipient will see your report. It never blocks anyone.",
   },
-  reportSent: { en: "Thank you. Your report has been added." },
+  reportSent: { en: "Thank you. Your report was added." },
   familiesProtected: { en: "How SafeSend is doing" },
 
   // ---------------------------------------------------------- details

@@ -30,6 +30,7 @@ import {
   SAFETY_TIP,
   pauseReasons,
   purposeHint,
+  reportCount,
   riskReports,
   splitMemo,
 } from "@/safety";
@@ -180,7 +181,7 @@ export default function HoldScreen() {
         {/* The network step. Available only because a guardian actually cancelled. */}
         {isGuardian && cancelled && !expired ? (
           <Card>
-            <Heading>{t("reportThisPayee", lang)}</Heading>
+            <Heading>{t("reportThisPayeeHeading", lang)}</Heading>
             <Body muted>{t("reportThisPayeeBody", lang)}</Body>
             {reported ? (
               <Pill label={t("reportSent", lang)} tone="trust" icon="✓" />
@@ -211,7 +212,7 @@ export default function HoldScreen() {
     networkCount: evidence?.count ?? hold.networkFlagCount,
     networkLastAt: evidence?.lastAt ?? hold.networkLastAt,
   });
-  const reasons = pauseReasons({ reason: hold.reason, reportCount: reports.length });
+  const reasons = pauseReasons({ reason: hold.reason, reportCount: reportCount(reports) });
   const hint = purposeHint(purpose, studentName);
   const phone = device.protectedUserPhone;
   const guardianName = family?.guardianName ?? "your guardian";
@@ -221,14 +222,13 @@ export default function HoldScreen() {
       <Screen>
         <Card tone={{ bg: tone.bg, accent: tone.accent }}>
           <Small muted={false} style={{ color: tone.fg }}>
-            Paused for safety. Your money is safe.
+            Paused. Your money is safe.
           </Small>
           <Amount color={tone.fg}>{hold.amountLabel}</Amount>
           <Body>To {payee}</Body>
         </Card>
 
         <Card>
-          <Heading>Why it was paused</Heading>
           <Bullets items={reasons} />
         </Card>
 
@@ -238,18 +238,10 @@ export default function HoldScreen() {
 
         <Card>
           <Pill label={`${guardianName} is checking  ${formatCountdown(secondsLeft)}`} tone="held" icon="⏳" />
-          <Body>We have asked {guardianName} to check this payment.</Body>
-          <Body muted>
-            If you want to cancel it, tell {guardianName} to tap Stop. If nobody answers, your money comes back to
-            you automatically.
-          </Body>
+          <Body muted>No answer? Your money comes back.</Body>
         </Card>
 
         <RiskReports reports={reports} subject={payee} />
-
-        <Card>
-          <FamilyThread studentName={studentName} guardianName={guardianName} pulse />
-        </Card>
 
         <SecondaryButton label={t("back", lang)} onPress={() => router.replace("/student")} />
         <Proof>
@@ -269,22 +261,18 @@ export default function HoldScreen() {
         </Small>
         <Amount color={tone.fg}>{hold.amountLabel}</Amount>
         <Body>To {payee}</Body>
-        <Small muted={false}>
-          Waiting since {formatAgo(Number(hold.openedAt))} · comes back to {studentName} automatically in{" "}
-          {formatCountdown(secondsLeft)}
-        </Small>
+        <Small muted={false}>Auto-returns in {formatCountdown(secondsLeft)}</Small>
       </Card>
 
       {/* 2. Why it was paused, and what they said it is for. */}
       <Card>
-        <Heading>Why it was paused</Heading>
         <Bullets items={reasons} />
         <Divider />
         <Body>
-          {studentName} says it is for: <Text style={{ fontWeight: "700" }}>{purpose ?? "not given"}</Text>
+          For: <Text style={{ fontWeight: "700" }}>{purpose ?? "not given"}</Text>
         </Body>
-        {note ? <Body muted>In their words: "{note}"</Body> : null}
-        {hint ? (
+        {note ? <Body muted>"{note}"</Body> : null}
+        {hint && !brief?.classification.explanation_en ? (
           <Card tone={{ bg: colors.heldSoft }} style={{ padding: space.md }}>
             <Body>{hint}</Body>
           </Card>
@@ -301,7 +289,7 @@ export default function HoldScreen() {
 
       {/* 4. Checklist before deciding. */}
       <Card>
-        <Heading>Before you decide, check with {studentName}</Heading>
+        <Heading>Check with {studentName}</Heading>
         {GUARDIAN_CHECKLIST.map((item, i) => (
           <CheckRow
             key={item}
@@ -313,13 +301,10 @@ export default function HoldScreen() {
         {brief?.classification.explanation_en ? (
           <>
             <Divider />
-            <Small>
-              {brief.classifierSource === "model" ? "Written by AI" : "Written by SafeSend's fixed rules"}. It can be
-              wrong, and it does not change the pause.
-            </Small>
+            <Small>{brief.classifierSource === "model" ? "AI guidance" : "Guidance"} · may be wrong</Small>
             <Body>{brief.classification.explanation_en}</Body>
             {brief.classification.familyQuestionSuggested ? (
-              <Body muted>Suggested question: {brief.classification.familyQuestionSuggested}</Body>
+              <Body muted>Ask: {brief.classification.familyQuestionSuggested}</Body>
             ) : null}
           </>
         ) : null}
@@ -332,12 +317,7 @@ export default function HoldScreen() {
           onPress={() => void Linking.openURL(`tel:${phone.replace(/[^\d+]/g, "")}`)}
         />
       ) : (
-        <Card tone={{ bg: colors.surfaceMuted }}>
-          <Body>
-            No phone number saved for {studentName}. Add it under "Setup" on your home screen. Never use a number
-            from a message or a caller.
-          </Body>
-        </Card>
+        <Small>Save {studentName}'s number in Setup to call from here.</Small>
       )}
 
       {/* 6. Official-number warning. */}
@@ -348,25 +328,22 @@ export default function HoldScreen() {
       {/* 7. Stop / Approve. Both are the existing passkey-signed resolveHold. */}
       <StopButton
         label="Stop transfer"
-        subtitle={`Money goes back to ${studentName}`}
+        subtitle="Money goes back"
         onPress={() => decide(false)}
         busy={busy === "stop"}
       />
       <CheckRow
-        label={`I have spoken to ${studentName} and checked this request.`}
+        label={`I spoke to ${studentName} and checked this.`}
         value={confirmed}
         onToggle={() => setConfirmed((v) => !v)}
       />
       <TrustButton
         label="Approve"
-        subtitle={confirmed ? t("faceId", lang) : "Tick the box above first"}
+        subtitle={confirmed ? t("faceId", lang) : "Tick the box first"}
         onPress={() => decide(true)}
         busy={busy === "allow"}
         disabled={!confirmed}
       />
-      <Small muted={false} style={{ textAlign: "center" }}>
-        Not sure? Stop it. {studentName} gets the money back.
-      </Small>
 
       {actionError ? <ErrorNote message={actionError} /> : null}
 
