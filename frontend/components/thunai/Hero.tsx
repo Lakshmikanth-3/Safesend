@@ -1,5 +1,5 @@
 import { APP_URL, appLinkProps } from "@/lib/app";
-import { HeldForSafety, StudentHome } from "./Screens";
+import Shot from "./Shot";
 
 export default function Hero() {
   return (
@@ -8,7 +8,7 @@ export default function Hero() {
         <div>
           <span className="inline-flex items-center gap-2 rounded-full border border-line bg-white px-3.5 py-1.5 text-[12px] font-semibold text-ink-muted">
             <span className="h-2 w-2 rounded-full bg-brand shadow-[0_0_10px_2px_rgba(0,255,34,0.8)]" />
-            Mobile app · real transactions on Monad testnet
+            Mobile app · live on Monad
           </span>
           <h1 className="mt-6 font-grotesk text-[clamp(40px,6.4vw,104px)] font-extrabold leading-[1] tracking-[-0.03em]">
             Send crypto safely,
@@ -44,10 +44,10 @@ export default function Hero() {
         {/* A gentle 3D lean on the two phones; it straightens when hovered. */}
         <div className="relative flex justify-center gap-5 [perspective:1600px] lg:justify-end">
           <div className="hidden translate-y-10 transition-transform duration-500 [transform:rotateY(14deg)_rotateX(4deg)] hover:[transform:rotateY(0deg)_rotateX(0deg)] sm:block">
-            <StudentHome />
+            <Shot src="/screens/warning.png" label="Paused, with reasons" />
           </div>
           <div className="transition-transform duration-500 [transform:rotateY(-10deg)_rotateX(4deg)] hover:[transform:rotateY(0deg)_rotateX(0deg)]">
-            <HeldForSafety />
+            <Shot src="/screens/review.png" label="Guardian review" />
           </div>
         </div>
       </div>

@@ -1,87 +1,64 @@
 import type { ReactNode } from "react";
 import { APP_URL, appLinkProps } from "@/lib/app";
-import { AcceptInvite, CheckResult, GuardianAlert, HeldForSafety, SendMoney, StoppedResult, StudentHome } from "./Screens";
-import { demo, seconds, steps as run, usd } from "@/lib/demo";
+import Shot from "./Shot";
 
 type Step = {
   n: string;
-  who: "Student" | "Parent" | "Both";
+  who: "Protected user" | "Guardian" | "Both";
   title: string;
   body: string;
   points: string[];
   screens: ReactNode;
 };
 
+const pair = (a: ReactNode, b: ReactNode) => (
+  <div className="flex flex-col items-center gap-6 xl:flex-row">
+    {a}
+    {b}
+  </div>
+);
+
+/** Every screen below is a real screenshot of the app, taken during a run on Monad testnet. */
 const steps: Step[] = [
   {
     n: "01",
     who: "Both",
-    title: "Set up in one Face ID each",
-    body: `${demo.student.name} creates his account and invites ${demo.guardian.name} on WhatsApp. She opens the link and accepts. She never has to configure anything.`,
-    points: [
-      "One passkey per person: no password, no recovery phrase, no email, no OTP.",
-      `${demo.guardian.name} signs the weekly allowance once: ${usd(demo.final.weeklyAmount)} a week, with rent on the signed schedule.`,
-      `${demo.student.name} can only pay people already on that signed schedule without a pause.`,
-    ],
-    screens: <AcceptInvite />,
+    title: "Set up with one Face ID each",
+    body: "Mdm Tan signs up and invites her son, Wei Ming. He accepts and sets the rules once.",
+    points: ["No password, no seed phrase.", "Anyone new, or over $1,000, asks Wei Ming first."],
+    screens: pair(<Shot src="/screens/welcome.png" label="Sign up" />, <Shot src="/screens/limits.png" label="Set the limits" />),
   },
   {
     n: "02",
-    who: "Student",
-    title: "The allowance arrives by itself",
-    body: `Every week the allowance settles in about a second (${seconds(run.settled?.latencyMs)} in the recorded run) and shows up on ${demo.student.name}'s home screen. Rent pays itself.`,
-    points: [
-      "Balance in dollars, next allowance and rent status on one screen.",
-      "Recipients are names, never account numbers or addresses.",
-      "No pending state: when it says sent, it is sent.",
-    ],
-    screens: <StudentHome />,
+    who: "Protected user",
+    title: "Say what it is for",
+    body: "Every payment to someone new starts with one question. \"Someone asked me to\" is the clearest scam sign there is.",
+    points: ["Six simple choices.", "Wei Ming sees the answer."],
+    screens: pair(<Shot src="/screens/send.png" label="Send money" />, <Shot src="/screens/warning.png" label="Paused, with reasons" />),
   },
   {
     n: "03",
-    who: "Student",
-    title: "Anything unusual pauses first",
-    body: `A new person, an unusual amount or a flagged number opens a hold. The money has not left. In the recorded run, a ${demo.hold.amountLabel} payment to a new person was held in ${seconds(run.held?.latencyMs)}.`,
-    points: [
-      "He must say what the payment is for before it is sent.",
-      "The hold names the pattern it resembles and says why, in plain words.",
-      `If nobody answers, the money returns to ${demo.student.name}. Never to the payee.`,
-    ],
-    screens: (
-      <div className="flex flex-col items-center gap-6 xl:flex-row">
-        <SendMoney />
-        <HeldForSafety />
-      </div>
-    ),
+    who: "Guardian",
+    title: "A guided review",
+    body: "Wei Ming sees why it was paused, what it is for, real reports, and a short checklist.",
+    points: ["Reports show where they came from and when.", "Call uses only the number he saved."],
+    screens: pair(<Shot src="/screens/review.png" label="Guardian review" />, <Shot src="/screens/checklist.png" label="Checklist and Stop" />),
   },
   {
     n: "04",
-    who: "Parent",
-    title: "She decides, with her own Face ID",
-    body: `${demo.guardian.name} gets an alert with the amount and the reason, then taps Stop it or Allow. In the recorded run her stop was confirmed in ${seconds(run.stopped?.latencyMs)} and the balance went from ${run.stopped?.balanceWhileHeld} back to ${run.stopped?.balanceAfter}.`,
-    points: [
-      "The decision is verified inside the contract on Monad. No server, no company and no scammer can override her.",
-      `Stopping returns the money to ${demo.student.name} at once.`,
-      `Once ${demo.student.name} is not alone on the call, the scammer's pressure stops working.`,
-    ],
-    screens: (
-      <div className="flex flex-col items-center gap-6 xl:flex-row">
-        <GuardianAlert />
-        <StoppedResult />
-      </div>
-    ),
+    who: "Guardian",
+    title: "Stop it, or approve it",
+    body: "Stop sends the money straight back. Approve needs a tick: \"I spoke to her and checked this.\"",
+    points: ["Checked by Face ID inside the contract.", "No answer? The money comes back by itself."],
+    screens: pair(<Shot src="/screens/stopped.png" label="Stopped" />, <Shot src="/screens/approved.png" label="Approved" />),
   },
   {
     n: "05",
-    who: "Parent",
-    title: `Check on ${demo.student.name}, any time`,
-    body: `A cloned voice can say anything. A passkey cannot be cloned. One tap asks ${demo.student.name}'s phone to answer with his own passkey. In the recorded run it was verified onchain in ${seconds(run.checked?.latencyMs)}.`,
-    points: [
-      "Proves it is really his phone, in his hand, right now.",
-      "Does not prove he is safe. The app says so, and suggests a video call.",
-      "He also has a quiet \"I can't talk freely\" option that freezes outgoing money.",
-    ],
-    screens: <CheckResult />,
+    who: "Protected user",
+    title: "Pressured outside the app?",
+    body: "One quiet tap tells her family and pauses her money, even for gift cards or bank transfers.",
+    points: ["Wei Ming can video call her at once."],
+    screens: <Shot src="/screens/sos.png" label="Silent SOS" />,
   },
 ];
 
@@ -92,10 +69,10 @@ export default function MobileApp() {
         <div className="mx-auto max-w-[980px] text-center">
           <p className="text-[13px] font-bold uppercase tracking-[0.2em] text-brand-deep">The mobile app</p>
           <h2 className="mt-3 font-grotesk text-[clamp(32px,4.6vw,68px)] font-extrabold leading-[1.05] tracking-[-0.025em]">
-            One app. Two people. One <span className="font-accent text-brand-deep">scene that matters.</span>
+            One app. Two people. <span className="font-accent text-brand-deep">One pause that matters.</span>
           </h2>
           <p className="mt-5 text-[18px] leading-relaxed text-ink-muted">
-            {demo.student.name} and {demo.guardian.name} use the same app, each with their own screens. Every number on these screens comes from a real run on Monad testnet, recorded below.
+            Mdm Tan and Wei Ming use the same app, each on their own phone. These are real screens from the app.
           </p>
         </div>
 
