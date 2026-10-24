@@ -93,6 +93,16 @@ The prompt was adjusted once after the first AI run (3 false alarms), so fresh s
 - **Backup guardian:** a second person who can stop or approve a paused payment if the main guardian cannot be reached. The main guardian invites them, and the backup can act only after the main guardian approves them with Face ID. A backup cannot change any limits.
 - **Phone number:** saved by the guardian on their own phone. The Call button never uses a number from a message.
 
+### What if the guardian is the problem?
+
+Sometimes the person pressuring an older adult is family. SafeSend limits what a guardian can do:
+
+- A guardian can only **stop or approve** a payment the protected user started. They can never move money, send it anywhere, or change the recipient. The contract enforces this.
+- **Stop always returns the money to the protected user**, never to the guardian.
+- The protected user can add a **backup guardian**, so one person is never the only check.
+- **No answer means the money comes back** to the protected user, so a guardian cannot trap funds by staying silent.
+- Every decision is a public onchain event, so it can be reviewed later.
+
 ### Made for older eyes
 
 Body text is 18px or larger, buttons are at least 56px tall, text contrast is at least 4.5:1, and there is a **Large text** switch. Main screens have no crypto words; technical details live under **Details**.
@@ -198,7 +208,7 @@ A real recording of the app on Monad testnet, two phones (Mdm Tan and Wei Ming):
 
 ## 9. Known limits
 
-- Reports come only from SafeSend guardians who stopped a payment. An external source (for example Chainabuse) depends on data access and is not connected yet.
+- Reports come only from SafeSend guardians who stopped a payment. Chainabuse's free API allows 10 lookups a month, so a real integration needs partner access; see [`docs/chainabuse.md`](docs/chainabuse.md).
 - The AI evaluation uses 10 hand-written scenarios and the prompt was tuned once on them; testing with real users is planned for refinement.
 - A backup guardian who clears their phone must be invited again; "restore with Face ID" only finds main guardians and protected users.
 - Testnet only, with stand-in dollars.
