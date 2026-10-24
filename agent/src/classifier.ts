@@ -67,6 +67,8 @@ Rules for your writing:
 
 export type ClassifierOptions = {
   apiKey?: string;
+  /** A free, OpenAI-compatible model (Groq, Gemini, OpenRouter, local Ollama). Used before Anthropic when set. */
+  openai?: { baseUrl: string; apiKey?: string; model: string };
   model: string;
   /** Lower effort keeps a one-shot label fast; raise it if labels look sloppy. */
   effort: "low" | "medium" | "high";
@@ -79,14 +81,30 @@ export class Classifier {
   constructor(private readonly options: ClassifierOptions) {
     // The SDK also resolves ANTHROPIC_API_KEY and `ant auth login` profiles on its own,
     // so an explicitly empty key is the only reason to stay offline.
-    this.client = options.apiKey === "" ? undefined : new Anthropic({ apiKey: options.apiKey });
+    this.client = options.apiKey ? new Anthropic({ apiKey: options.apiKey }) : undefined;
   }
 
   get enabled(): boolean {
-    return this.client !== undefined;
+    return this.client !== undefined || this.options.openai !== undefined;
+  }
+
+  get label(): string {
+    if (this.options.openai) return `${this.options.openai.model} (OpenAI-compatible)`;
+    return this.client ? this.options.model : "deterministic rules (no AI configured)";
+  }
+
+  private classifyOpenAI(input: ClassifierInput): Promise<Classification> {
+    return classifyOpenAICompatible(this.options.openai!, input, Math.max(this.options.timeoutMs, 30_000));
   }
 
   async classify(input: ClassifierInput): Promise<Classification & { source: "model" | "rules" }> {
+    if (this.options.openai) {
+      const result = await this.classifyOpenAI(input).catch((error: Error) => {
+        console.warn(`free model unavailable: ${error.message}`);
+        return undefined;
+      });
+      return result ? { ...result, source: "model" } : { ...ruleBasedClassification(input), source: "rules" };
+    }
     if (!this.client) return { ...ruleBasedClassification(input), source: "rules" };
 
     try {
@@ -120,6 +138,43 @@ export class Classifier {
       return { ...ruleBasedClassification(input), source: "rules" };
     }
   }
+}
+
+/** Same prompt and the same JSON shape, through any OpenAI-compatible chat API. */
+async function classifyOpenAICompatible(
+  openai: NonNullable<ClassifierOptions["openai"]>,
+  input: ClassifierInput,
+  timeoutMs: number,
+): Promise<Classification> {
+  const response = await fetch(`${openai.baseUrl.replace(/\/$/, "")}/chat/completions`, {
+    method: "POST",
+    headers: { "content-type": "application/json", ...(openai.apiKey ? { authorization: `Bearer ${openai.apiKey}` } : {}) },
+    signal: AbortSignal.timeout(timeoutMs),
+    body: JSON.stringify({
+      model: openai.model,
+      temperature: 0.2,
+      response_format: { type: "json_object" },
+      messages: [
+        {
+          role: "system",
+          content: `${SYSTEM_PROMPT}
+
+Reply with ONLY a JSON object with these keys:
+  "scriptId": integer 0-5,
+  "confidence": number 0-1,
+  "explanation_en": string (one or two short sentences, what the evidence shows and what is uncertain),
+  "familyQuestionSuggested": string (one short question).`,
+        },
+        { role: "user", content: describeSituation(input) },
+      ],
+    }),
+  });
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  const body = (await response.json()) as { choices?: { message?: { content?: string } }[] };
+  const text = body.choices?.[0]?.message?.content ?? "";
+  const json = JSON.parse(text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1));
+  const parsed = ClassificationSchema.parse({ ...json, scriptId: Math.round(Number(json.scriptId)), confidence: Number(json.confidence) });
+  return { ...parsed, explanation_ta: parsed.explanation_en };
 }
 
 /** "Purpose: Someone asked me to. the rest" → { purpose, note }, as the app writes it. */

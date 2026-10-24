@@ -44,6 +44,13 @@ const schema = z.object({
 
   /** Classifier. An empty key forces the deterministic fallback. */
   ANTHROPIC_API_KEY: z.string().optional(),
+  /**
+   * Free alternative: any OpenAI-compatible chat API. Groq (free key), Google Gemini's OpenAI endpoint,
+   * OpenRouter's free models, or a local Ollama (http://localhost:11434/v1, no key needed).
+   */
+  AI_BASE_URL: z.preprocess((v) => (v === "" ? undefined : v), z.string().url().optional()),
+  AI_API_KEY: z.preprocess((v) => (v === "" ? undefined : v), z.string().optional()),
+  AI_MODEL: z.preprocess((v) => (v === "" ? undefined : v), z.string().optional()),
   CLASSIFIER_MODEL: z.string().default("claude-opus-5-5"),
   CLASSIFIER_EFFORT: z.enum(["low", "medium", "high"]).default("low"),
   CLASSIFIER_TIMEOUT_MS: z.coerce.number().default(12_000),

@@ -51,6 +51,7 @@ const vault = new VaultService(chain, deployment);
 
 const classifier = new Classifier({
   apiKey: env.ANTHROPIC_API_KEY,
+  openai: env.AI_BASE_URL && env.AI_MODEL ? { baseUrl: env.AI_BASE_URL, apiKey: env.AI_API_KEY, model: env.AI_MODEL } : undefined,
   model: env.CLASSIFIER_MODEL,
   effort: env.CLASSIFIER_EFFORT,
   timeoutMs: env.CLASSIFIER_TIMEOUT_MS,
@@ -622,7 +623,7 @@ app.get("/cre/status", async () => ({
   ok: true,
   orchestrator: env.ORCHESTRATOR,
   standbyKeeperAfterMs: env.CRE_GRACE_MS,
-  classifier: classifier.enabled ? env.CLASSIFIER_MODEL : "deterministic rules (no API key)",
+  classifier: classifier.label,
   openBriefs: [...briefs.values()].map((b) => ({
     holdId: b.holdId,
     scriptId: b.classification.scriptId,
@@ -635,7 +636,7 @@ app.get("/cre/status", async () => ({
 app.get("/health", async () => ({
   ok: true,
   uptime: process.uptime(),
-  classifier: classifier.enabled ? env.CLASSIFIER_MODEL : "deterministic rules (no API key)",
+  classifier: classifier.label,
   keeper: keeper.status(),
   orchestrator: env.ORCHESTRATOR,
   creLastSeenAt: lastCreAt || null,
