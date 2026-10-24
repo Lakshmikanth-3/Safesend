@@ -188,3 +188,5 @@ export const backupJoinBody = z.object({
   acct: address,
 });
 export const backupApproveBody = z.object({ familyId: bigintish, auth: webAuthnAuth });
+
+export const senderCancelBody = z.object({ holdId: bigintish, signature: bytesHex });

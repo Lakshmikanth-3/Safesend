@@ -694,13 +694,24 @@ app.get<{ Querystring: { familyId: string; to: string; amount: string; memo?: st
 
 app.get<{ Params: { id: string } }>("/hold/:id", async (request, reply) => {
   const holdId = BigInt(request.params.id);
-  let hold = await vault.readHold(holdId).catch(() => null);
+  let readFailed = false;
+  let hold = await vault.readHold(holdId).catch(() => {
+    readFailed = true;
+    return null;
+  });
+  // A failed read on a busy testnet is not "no such payment": tell the app to retry.
+  if (readFailed) return reply.code(503).send({ error: "The network is busy. Retrying…" });
   if (!hold || hold.status === 0) return reply.code(404).send({ error: "No such hold." });
 
   // Fail-safe on read: a pause nobody answered in time is expired right here, so the money goes back even
   // where no background keeper runs (serverless hosting). Anyone may call expireHold; it only ever refunds.
   if (hold.status === 1 /* OPEN */ && Number(hold.releaseAt) * 1000 <= Date.now()) {
     await vault.expireHold(holdId).catch(() => undefined);
+    hold = (await vault.readHold(holdId).catch(() => null)) ?? hold;
+  }
+  // An approved payment whose cooling-off period is over is paid the same way.
+  if (hold.status === 5 /* APPROVED */ && Number(hold.releaseAt) * 1000 <= Date.now()) {
+    await vault.executeRelease(holdId).catch(() => undefined);
     hold = (await vault.readHold(holdId).catch(() => null)) ?? hold;
   }
 
@@ -716,6 +727,22 @@ app.get<{ Params: { id: string } }>("/hold/:id", async (request, reply) => {
     networkFlagCount: flag.count,
     networkLastAt: flag.lastAt,
   });
+});
+
+/** What the protected user's own key signs to cancel their paused payment. */
+app.get<{ Params: { id: string } }>("/hold/:id/cancel-digest", async (request) => {
+  const digest = await vault.senderCancelDigest(BigInt(request.params.id));
+  return json({ digest });
+});
+
+/**
+ * The protected user cancels their own paused (or approved, still cooling off) payment. It can only
+ * return the money to them; the contract checks their signature.
+ */
+app.post("/hold/cancel", async (request) => {
+  const body = parse(S.senderCancelBody, request.body);
+  const tx = await vault.cancelBySender(body.holdId, body.signature as Hex);
+  return json({ txHash: tx.hash, latencyMs: Math.round(tx.latencyMs), sync: tx.sync });
 });
 
 /** The challenge the guardian's passkey signs to stop or allow a held payment. */
