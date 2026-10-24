@@ -55,7 +55,7 @@ export function connectionProblem(relayerUrl: string, agentUrl: string): string 
 }
 
 /**
- * Whether this device can do what Companion needs.
+ * Whether this device can do what SafeSend needs.
  *
  * A parent's low-end Android may not support the PRF extension, and that is a hard
  * requirement rather than a nice-to-have, so it is better to say so plainly on the first
@@ -68,7 +68,7 @@ export function passkeySupport(): { supported: boolean; reason?: string } {
     return {
       supported: false,
       reason:
-        "Face ID sign-in is not built into the native app yet. Open Companion in your phone's browser instead.",
+        "Face ID sign-in is not built into the native app yet. Open SafeSend in your phone's browser instead.",
     };
   }
   if (typeof window === "undefined") return { supported: false, reason: "No browser available." };
@@ -81,7 +81,7 @@ export function passkeySupport(): { supported: boolean; reason?: string } {
   if (!window.isSecureContext) {
     return {
       supported: false,
-      reason: "Passkeys need a secure connection. Open Companion over HTTPS, or on localhost.",
+      reason: "Passkeys need a secure connection. Open SafeSend over HTTPS, or on localhost.",
     };
   }
   return { supported: true };

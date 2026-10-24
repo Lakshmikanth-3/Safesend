@@ -30,7 +30,7 @@ const IV_BYTES = 12;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function subtle(): any {
   const api = (globalThis as any).crypto?.subtle;
-  if (!api) throw new Error("This device cannot do the encryption Companion needs (no WebCrypto).");
+  if (!api) throw new Error("This device cannot do the encryption SafeSend needs (no WebCrypto).");
   return api;
 }
 

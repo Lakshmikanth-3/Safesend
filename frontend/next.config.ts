@@ -5,7 +5,7 @@ import type { NextConfig } from "next";
  *
  *   /            the landing page
  *   /traction    the live counts
- *   /app         the Companion app (an Expo web export placed in public/app by `pnpm web:build`)
+ *   /app         the SafeSend app (an Expo web export placed in public/app by `pnpm web:build`)
  *   /relayer/*   the relayer, proxied
  *   /agent/*     the agent, proxied
  *

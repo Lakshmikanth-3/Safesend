@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Agora's own testnet self-service, so Companion can use the real Instant Settlement pair on Monad testnet.
+ * Agora's own testnet self-service, so SafeSend can use the real Instant Settlement pair on Monad testnet.
  *
  * Agora's docs ("Executing a Swap", "Getting Testnet Tokens"): on testnets a Whitelister contract holds the whitelister role
  * on every pair, and anyone may call `setApprovedSwapper(address)`. An AUSD faucet mints test AUSD. There is no CTK faucet

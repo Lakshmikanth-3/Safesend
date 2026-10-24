@@ -5,7 +5,7 @@ import { Platform } from "react-native";
  * a parent's phone.
  *
  * The one rule that carries meaning rather than taste: `trust` (green) appears
- * ONLY where a passkey acts. An approval, the Companion seal, a "Signed by" line. Nothing
+ * ONLY where a passkey acts. An approval, the SafeSend seal, a "Signed by" line. Nothing
  * decorative is ever purple, so purple on screen always means a real family member
  * authorised something. Breaking that rule would quietly destroy the only visual signal
  * the product has.

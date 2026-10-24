@@ -298,6 +298,7 @@ try {
         DEV_ADMIN_TOKEN: E2E_ADMIN,
         INTERNAL_TOKEN: E2E_INTERNAL,
         TESTNET_PARTNER_STANDIN: "true",
+        PARTNER_MAX_USD: "1000",
         LOG_LEVEL: "warn",
       },
     });
@@ -744,7 +745,7 @@ try {
   assert(paged.ok === true, "the agent builds the page");
   const decoded = decodeURIComponent(paged.whatsAppLink);
   assert(decoded.includes("Arjun pressed SOS"), "the page names who pressed SOS");
-  assert(decoded.includes(`companion-${sos.room}`), "the page carries the private video-call link");
+  assert(decoded.includes(`safesend-${sos.room}`), "the page carries the private video-call link");
 
   // What the caller wants is optional, accepted once, and cannot be used to spam her.
   const detail = await api("/sos/detail", {
@@ -1038,7 +1039,7 @@ try {
     const bin = process.env.CRE_BIN || join(process.env.LOCALAPPDATA || "", "Programs", "cre", "cre.exe");
     const sim = spawnSync(
       bin,
-      ["workflow", "simulate", "companion-orchestrator", "--target", "staging-settings", "--config", "./config.local.json", "--non-interactive", "--trigger-index", "0"],
+      ["workflow", "simulate", "safesend-orchestrator", "--target", "staging-settings", "--config", "./config.local.json", "--non-interactive", "--trigger-index", "0"],
       { cwd: join(root, "cre"), encoding: "utf8", timeout: 180_000 },
     );
     const output = `${sim.stdout ?? ""}${sim.stderr ?? ""}`.replace(/\[[0-9;]*m/g, "");

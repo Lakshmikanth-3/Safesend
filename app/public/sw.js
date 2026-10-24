@@ -16,7 +16,7 @@ self.addEventListener("push", (event) => {
     data = { title: "SafeSend", body: event.data ? event.data.text() : "" };
   }
 
-  const title = data.title || "Companion";
+  const title = data.title || "SafeSend";
   const body = [data.body, data.footer].filter(Boolean).join("\n\n");
   event.waitUntil(
     self.registration.showNotification(title, {

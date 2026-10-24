@@ -79,7 +79,7 @@ export class ThunaiWebAuthnClient implements WebAuthnClient {
     this.secondarySalt = undefined;
     if (!output) {
       throw new Error(
-        "This device did not return a second PRF output. Companion needs a passkey that supports the PRF extension.",
+        "This device did not return a second PRF output. SafeSend needs a passkey that supports the PRF extension.",
       );
     }
     return output;
@@ -232,7 +232,7 @@ type PrfExtensionResults = {
 function assertWebAuthnAvailable() {
   if (typeof navigator === "undefined" || !navigator.credentials?.create) {
     throw new Error(
-      "This device cannot use passkeys. Open Companion in Safari on iPhone or Chrome on Android.",
+      "This device cannot use passkeys. Open SafeSend in Safari on iPhone or Chrome on Android.",
     );
   }
 }

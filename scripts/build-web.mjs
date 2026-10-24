@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Builds ONE website: the landing page with the Companion app inside it at /app.
+ * Builds ONE website: the landing page with the SafeSend app inside it at /app.
  *
  * It exports the Expo app as a static web build into `frontend/public/app`, configured to live under /app
  * and to reach the relayer and agent through the same origin (/relayer and /agent, which the landing
@@ -53,7 +53,7 @@ function run(command, args, options = {}) {
 }
 
 // 1. Export the app, mounted at /app, talking to same-origin /relayer and /agent.
-console.log("\n[1/2] Exporting the Companion app to frontend/public/app ...\n");
+console.log("\n[1/2] Exporting the SafeSend app to frontend/public/app ...\n");
 if (existsSync(outDir)) rmSync(outDir, { recursive: true, force: true });
 // --clear: Expo inlines EXPO_PUBLIC_ values at build time, and a cached build keeps the old ones (an indexer address
 // added to .env would otherwise never reach the bundle).

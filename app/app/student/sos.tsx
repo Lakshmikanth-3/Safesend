@@ -27,7 +27,7 @@ import { useFamily } from "@/hooks/useThunai";
  * it may be on a call with someone watching.
  *
  * It does not depend on how the scammer wants to be paid. A gift card, a Zelle transfer or
- * a wire never touches Companion, and no app can block those. What every one of those scams
+ * a wire never touches SafeSend, and no app can block those. What every one of those scams
  * needs is a victim who is alone, and this is the one tap that ends that.
  */
 const DEMANDS: { kind: DemandKind; label: string }[] = [

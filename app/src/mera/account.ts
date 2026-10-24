@@ -19,7 +19,7 @@ import { ThunaiWebAuthnClient, hexToBytes, type CapturedAssertion } from "./weba
 
 /**
  * The account layer. Mera is the whole of it: there is no Dynamic, no Privy, no email,
- * no OTP and no seed phrase anywhere in Companion.
+ * no OTP and no seed phrase anywhere in SafeSend.
  *
  * Three namespaces, each a distinct 32-byte PRF salt, each doing a different job:
  *
@@ -131,7 +131,7 @@ function relyingParty(rpId: string) {
 }
 
 const PRF_MISSING =
-  "This browser can't make the kind of passkey Companion needs. Open Companion in Chrome or Safari on your phone.";
+  "This browser can't make the kind of passkey SafeSend needs. Open SafeSend in Chrome or Safari on your phone.";
 
 /**
  * Mera finds out that PRF is missing only after the creation ceremony, and the passkey it just made stays on the

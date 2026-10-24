@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Registers Companion's agent in the ERC-8004 Identity registry on Monad testnet.
+ * Registers SafeSend's agent in the ERC-8004 Identity registry on Monad testnet.
  *
  * The identity NFT is owned by the team's deployer account, never by the vault: the vault is money
  * and the agent's identity should be able to change hands without touching it. The registration
@@ -45,7 +45,7 @@ const appUrl = env.APP_URL || "http://localhost:8081";
 
 const registration = {
   type: "https://eips.ethereum.org/EIPS/eip-8004#registration-v1",
-  name: "Companion guardian agent",
+  name: "SafeSend guardian agent",
   description:
     "Runs a family's weekly allowance, explains why a payment was held, and pages the parent. It never holds keys and can never move or release money: holds come from contract rules and only the parent's passkey releases one.",
   image: "",

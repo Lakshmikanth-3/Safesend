@@ -25,7 +25,7 @@ import SetupCard from "@/ui/SetupCard";
  * Arjun's home.
  *
  * The balance leads, because that is what he opens the app for. The guardian strip is
- * always visible, not buried in settings: the point of Companion is that the family link is
+ * always visible, not buried in settings: the point of SafeSend is that the family link is
  * a feature he can see, not a restriction he discovers when something is blocked.
  */
 export default function StudentHome() {

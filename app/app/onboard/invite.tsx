@@ -20,7 +20,7 @@ import { inviteUrl, pollForGuardian, whatsAppInvite } from "@/actions/onboarding
 import { useDeviceState } from "@/state/store";
 
 /**
- * "Invite Kavya as your Companion."
+ * "Invite Kavya as your SafeSend."
  *
  * WhatsApp is the channel, not email and not an in-app invite, because that is where a
  * Chennai family actually talks. The link opens straight onto her accept screen, so the

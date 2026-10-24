@@ -2,7 +2,7 @@ import { HOLD_STATUS } from "@thunai/shared";
 import type { VaultService } from "@thunai/evm";
 
 /**
- * The keeper: the only part of Companion that acts without a person.
+ * The keeper: the only part of SafeSend that acts without a person.
  *
  * It does exactly two things, both of which the contract would let any stranger do:
  *

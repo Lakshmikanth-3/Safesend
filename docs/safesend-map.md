@@ -70,9 +70,9 @@ pnpm dev                           # relayer :8787, agent :8788, app http://loca
 | Stand-in CTK (tCTK) | `0xc79f8fa19F8D197a42100BbEf95F2db989266d3f` |
 | Stand-in AUSD (tAUSD) | `0xA880e099Ca5134a992B3aEa6c7D7099ae4802771` |
 
-Earlier deployments are kept as `contracts/deployments/10143.companion-original.json` and `10143.safesend-v1.json` (rolling limit only). The relayer state for v1 is archived in `relayer/.data/*.safesend-v1.json`.
+Earlier deployments are kept as `contracts/deployments/10143.v0.json` and `10143.safesend-v1.json` (rolling limit only). The relayer state for v1 is archived in `relayer/.data/*.safesend-v1.json`.
 
-`pnpm e2e:testnet` passes the whole core journey on this vault. Its optional Chainlink CRE and ERC-8004 feedback checks fail because those Companion extras are not configured.
+`pnpm e2e:testnet` passes the whole core journey on this vault. Its optional Chainlink CRE and ERC-8004 feedback checks fail because those extras are not configured.
 
 ## 5. Still open
 

@@ -7,7 +7,7 @@ import { useLastLatency } from "@/latency";
 /**
  * "How fast." A bank transfer against the confirmation time this phone really measured.
  *
- * The bank figure is a typical range, not a measurement of anyone's transfer. The Companion figure
+ * The bank figure is a typical range, not a measurement of anyone's transfer. The SafeSend figure
  * is the receipt time of the last transaction this phone made, and the card says which one. With
  * nothing measured yet it shows a dash rather than a number it has not earned.
  */
