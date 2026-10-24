@@ -6,7 +6,10 @@ export default function Footer() {
       <div className="mx-auto flex max-w-[1680px] flex-col items-start justify-between gap-6 px-5 md:flex-row md:items-center md:px-8 2xl:px-16">
         <div className="flex items-center gap-2.5">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo.png" alt="SafeSend" className="h-10 w-auto rounded-lg" />
+          <img src="/logo-mark.svg" alt="" className="h-8 w-auto" />
+          <span className="font-grotesk text-[19px] font-extrabold tracking-tight">
+            Safe<span className="text-[#00838F]">Send</span>
+          </span>
         </div>
         <div className="flex items-center gap-6 text-[14px] text-ink-muted">
           <a href="#app" className="hover:text-brand-deep">
