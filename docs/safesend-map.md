@@ -30,7 +30,7 @@ Status as of 25 Oct 2026, after Phase 1 (mapping) and Phase 2 (sections A–E).
 | F | AI guidance + evaluation | **Added** | `agent/src/classifier.ts` (Singapore scam types, uses the stated purpose, says what is uncertain, rule-based fallback); labelled on the guardian screen; `docs/ai-evaluation.md` from `agent/src/evaluate.ts`. The AI column needs an `ANTHROPIC_API_KEY`. |
 | G | Base font ≥ 18, buttons ≥ 56, contrast | **Done** | `app/src/theme/index.ts` (body 18, small 16; `inkFaint` darkened to pass 4.5:1), buttons `minHeight: 56`, Stop 64 |
 | G | Large text setting | **Added** | `SetupCard` on both home screens; scales text by 1.2 (`useScaled` in `components.tsx`) |
-| G | No jargon on main screens | **Mostly** | Main screens cleaned. `details.tsx` and `network.tsx` still use technical terms, as intended for "Details". |
+| G | No jargon on main screens | **Mostly** | Main screens cleaned. `details.tsx` still uses technical terms, as intended for "Details". |
 
 ## 2. Commands
 

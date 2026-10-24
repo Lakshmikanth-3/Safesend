@@ -6,6 +6,8 @@
 
 Web3 for Social Good 2026 (SMU × GSR Foundation × UMA) · **Tech Track** · Monad testnet (chain 10143)
 
+**▶ Demo video:** [https://youtu.be/SuMC1kGFgkk](https://youtu.be/SuMC1kGFgkk)
+
 **The golden rule:** fixed smart-contract rules and authorised people decide. AI only explains and guides. AI can never move money.
 
 ---
@@ -29,6 +31,30 @@ Safe and Coinbase already offer limits, delays, trusted contacts and recipient c
 | **A 16-year-old** with a first crypto account, tempted by "guaranteed" returns from a group chat. | **Their parent.** Approves anything unusual before it leaves. |
 
 ## 3. How it works
+
+### Working flow
+
+```mermaid
+flowchart TD
+    A[Protected user taps Send] --> B["What is this payment for?<br/>Family · Shopping · Bills · Investment · Someone asked me to · Other"]
+    B --> C{"Smart contract checks the rules<br/>new recipient? reported? over a limit?"}
+    C -- no --> D[Paid straight away]
+    C -- yes --> E["Warning screen<br/>why, in plain words · safety tip · reports"]
+    E -- Cancel transfer --> F[Nothing is sent]
+    E -- Ask my guardian --> G[Money paused inside the vault]
+    G -- user cancels --> H[Money back to the user]
+    G --> I{"Guardian review<br/>reasons · purpose · reports · checklist · Call · AI guidance"}
+    I -. guardian unavailable .-> J[Backup guardian reviews]
+    J --> I
+    I -- Stop --> H
+    I -- Approve, after 'I spoke to them' --> K[2-minute cooling-off]
+    K -- user cancels --> H
+    K -- time passes --> L[Paid to the recipient]
+    G -- nobody answers in 30 min --> H
+    I -- Stop and report --> M[Shared onchain report warns other families]
+```
+
+### The same flow, as text
 
 ```
 Protected user taps Send
@@ -78,12 +104,12 @@ Will the contract pause this?
 
 ### Guidance for the guardian (AI only explains)
 
-The guardian sees one or two short sentences on what the evidence shows and what is uncertain, plus one question fitted to the stated purpose. It comes from a free AI model (`openai/gpt-oss-120b` on Groq, any OpenAI-compatible API works) when one is configured, and from fixed rules otherwise. The screen always says which. The pause has already happened before the guidance runs, and the guidance cannot change it. Evaluation on 20 scenarios ([`docs/ai-evaluation.md`](docs/ai-evaluation.md)): 10 used once to tune the AI prompt, and 10 fresh ones written afterwards and never used for tuning.
+The guardian sees one or two short sentences on what the evidence shows and what is uncertain, plus one question fitted to the stated purpose. It comes from an AI model (`openai/gpt-oss-120b` through Groq; any OpenAI-compatible API works) when one is configured, and from fixed rules otherwise. The screen always says which. The pause has already happened before the guidance runs, and the guidance cannot change it. Evaluation on 20 scenarios ([`docs/ai-evaluation.md`](docs/ai-evaluation.md)): 10 used once to tune the AI prompt, and 10 fresh ones written afterwards and never used for tuning.
 
 | Guidance | Scams warned (all 20) | False alarms (all 20) | Scams warned (fresh 10 only) |
 |---|---|---|---|
 | Fixed rules (fallback) | 7 / 10 | 3 / 10 | 2 / 5 |
-| AI (gpt-oss-120b, free on Groq) | **10 / 10** | 3 / 10 | **5 / 5** |
+| AI (gpt-oss-120b) | **10 / 10** | 3 / 10 | **5 / 5** |
 
 The AI catches every scam, including ones with no obvious keywords (a dating-app "friend", unlocking game winnings, a "son" on a new number), which the rules miss. Both still raise false alarms on genuine payments that mention police or banks. The guardian makes the final decision either way.
 
@@ -112,6 +138,41 @@ Sometimes the person pressuring an older adult is family. SafeSend limits what a
 ### Made for older eyes
 
 Body text is 18px or larger, buttons are at least 56px tall, text contrast is at least 4.5:1, and there is a **Large text** switch. Main screens have no crypto words; technical details live under **Details**.
+
+## Architecture
+
+```mermaid
+flowchart LR
+    subgraph Phones["Two phones (web app, Face ID passkeys)"]
+        U["Protected user<br/>Mdm Tan"]
+        G["Guardian<br/>Wei Ming (+ backup)"]
+    end
+    subgraph Vercel["Vercel"]
+        W["Website + app<br/>(Next.js, Expo web)"]
+        R["Relayer<br/>pays network fees,<br/>no spending power"]
+        A["Agent<br/>alerts, guidance, keeper"]
+        B[("Vercel Blob<br/>names, invites, briefs")]
+    end
+    AI["AI model<br/>explains only,<br/>never moves money"]
+    subgraph Monad["Monad testnet"]
+        V["Vault contract<br/>pause rules · limits · holds<br/>cancel · cooling-off · backup guardian"]
+        S["Reports contract<br/>shared scam reports"]
+    end
+    U --> W
+    G --> W
+    W --> R
+    W --> A
+    R --> B
+    A --> B
+    A --> AI
+    R -- "signed by the user / guardian's Face ID" --> V
+    V --> S
+    A -- "expire, release" --> V
+```
+
+- **The contract decides.** Pause rules, limits, holds, cancellation and cooling-off are enforced on Monad. The relayer only pays network fees; it cannot move money without the protected user's signature or a guardian's Face ID, both checked inside the contract.
+- **The AI only explains.** It writes the guidance the guardian reads, after the payment is already paused. If it is unavailable, fixed rules write the guidance instead.
+- **Small server state** (display names, invites, alert briefs) lives in Vercel Blob. Nothing there can move money.
 
 ## 4. Why Web3
 
@@ -169,6 +230,7 @@ pnpm parity                              # TypeScript and Solidity agree on ever
 pnpm typecheck && pnpm -r test
 pnpm e2e                                 # the whole journey on a local chain
 pnpm e2e:testnet                         # the same journey on Monad testnet (needs pnpm dev running)
+pnpm api:build                           # bundles the relayer and agent for Vercel
 pnpm --filter @thunai/agent evaluate     # regenerates docs/ai-evaluation.md
 ```
 
@@ -201,7 +263,9 @@ Contract and package names (`ThunaiVault`, `ScamSignals`, `@thunai/*`) are kept 
 
 ## 8. Demo video
 
-A real recording of the app on Monad testnet, two phones (Mdm Tan and Wei Ming): signup, rules, the scam paused with verified reports, the guided review, Stop, a genuine gift approved, Silent SOS, Details, and Forget this device.
+▶ **Watch:** [https://youtu.be/SuMC1kGFgkk](https://youtu.be/SuMC1kGFgkk)
+
+Title → pain points → real incidents reported by the Singapore Police Force → the problem → the solution → target users and use cases → a real recording of the app on Monad testnet (setup, the scam paused, the guided review, Stop, a genuine gift approved with cooling-off, the user cancelling, Silent SOS) → architecture → working flow.
 
 ### Demo script (about 3 minutes)
 
