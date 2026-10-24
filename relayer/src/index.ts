@@ -36,16 +36,18 @@ import {
   loadErc8004,
   saveFeedbackCalldata,
   VaultService,
-} from "@thunai/evm";
+ blobState } from "@thunai/evm";
 import { loadEnv } from "./env";
 import { Store } from "./store";
 import { TallyFollower } from "./tally";
 import * as S from "./schemas";
 
 const env = loadEnv();
+const ON_VERCEL = Boolean(process.env.VERCEL);
 
 const app = Fastify({
-  logger: { level: env.LOG_LEVEL, transport: { target: "pino-pretty" } },
+  // Pretty logs locally; plain JSON on serverless hosting, where a worker-thread transport cannot load.
+  logger: ON_VERCEL ? { level: env.LOG_LEVEL } : { level: env.LOG_LEVEL, transport: { target: "pino-pretty" } },
   // Receipts are small; keep the body limit tight.
   bodyLimit: 256 * 1024,
 });
@@ -63,7 +65,14 @@ const deployment = loadDeployment(
   { thunaiVault: env.THUNAI_VAULT_ADDRESS, scamSignals: env.SCAM_SIGNALS_ADDRESS },
   chain.chainId,
 );
-const store = new Store(env.DATA_DIR);
+const store = await Store.create(
+  ON_VERCEL ? "/tmp/safesend" : env.DATA_DIR,
+  await blobState("relayer", env.INTERNAL_TOKEN ?? env.RELAYER_PRIVATE_KEY),
+);
+// A save must land before a serverless function freezes.
+app.addHook("onSend", async () => {
+  await store.settle();
+});
 // Turns a phone number or email into a payee address. Secret, so an address reveals nothing about the person.
 const payeeSalt = (env.PAYEE_SALT ?? keccak256(stringToBytes(`${env.RELAYER_PRIVATE_KEY}companion/payee-salt`))) as Hex;
 const vault = new VaultService(chain, deployment, (familyId) =>
@@ -84,7 +93,7 @@ const tally = new TallyFollower(
   deployment.thunaiVault as Address,
   deployment.scamSignals as Address,
   tallyStart,
-  env.DATA_DIR,
+  ON_VERCEL ? "/tmp/safesend" : env.DATA_DIR,
   // Our own end-to-end runs create the fictional Arjun and Kavya, counted apart from real families. A family this relayer
   // has no record of (its data was wiped by a restart) is "unknown", never "real": we only claim a real family we can see.
   (familyId) => {
@@ -94,7 +103,8 @@ const tally = new TallyFollower(
   },
   app.log,
 );
-tally.start();
+// Counting events is a background loop; serverless hosting has no background, so it is skipped there.
+if (!ON_VERCEL) tally.start();
 
 /** bigints are not JSON-serialisable, so every response goes through this. */
 function json<T>(value: T): T {
@@ -684,8 +694,15 @@ app.get<{ Querystring: { familyId: string; to: string; amount: string; memo?: st
 
 app.get<{ Params: { id: string } }>("/hold/:id", async (request, reply) => {
   const holdId = BigInt(request.params.id);
-  const hold = await vault.readHold(holdId).catch(() => null);
+  let hold = await vault.readHold(holdId).catch(() => null);
   if (!hold || hold.status === 0) return reply.code(404).send({ error: "No such hold." });
+
+  // Fail-safe on read: a pause nobody answered in time is expired right here, so the money goes back even
+  // where no background keeper runs (serverless hosting). Anyone may call expireHold; it only ever refunds.
+  if (hold.status === 1 /* OPEN */ && Number(hold.releaseAt) * 1000 <= Date.now()) {
+    await vault.expireHold(holdId).catch(() => undefined);
+    hold = (await vault.readHold(holdId).catch(() => null)) ?? hold;
+  }
 
   const flag = await vault.flagged(toHandleHash(hold.to)).catch(() => ({ count: 0, lastAt: 0 }));
   return json({
@@ -1182,6 +1199,9 @@ app.setErrorHandler((error: Error, _request, reply) => {
   reply.code(name ? 409 : status).send({ error: message.replace(/https?:\/\/\S+/g, "[hidden]"), ...(name ? { reason: name } : {}) });
 });
 
+export default app;
+
+if (!ON_VERCEL) {
 const address = await app.listen({ port: env.PORT, host: env.HOST });
 app.log.info(
   {
@@ -1190,5 +1210,6 @@ app.log.info(
     relayer: chain.account.address,
     agoraEnabled: deployment.agoraEnabled,
   },
-  `Companion relayer on ${address} — pays gas, holds no spending power`,
+  `SafeSend relayer on ${address} — pays gas, holds no spending power`,
 );
+}

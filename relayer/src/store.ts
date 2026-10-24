@@ -1,6 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { Address } from "viem";
+import type { RemoteState } from "@thunai/evm";
 
 /**
  * The only state the server keeps.
@@ -95,6 +96,24 @@ const EMPTY: Shape = { families: {}, invites: {}, pending: {}, subscriptions: []
 export class Store {
   private data: Shape = structuredClone(EMPTY);
   private readonly file: string;
+  private remote?: RemoteState;
+  private pending: Promise<void> = Promise.resolve();
+
+  /** On serverless hosting the state lives in a remote store instead of a local file. */
+  static async create(dir: string, remote?: RemoteState): Promise<Store> {
+    const store = new Store(dir);
+    if (remote) {
+      store.remote = remote;
+      const saved = await remote.load().catch(() => undefined);
+      if (saved) store.data = { ...structuredClone(EMPTY), ...JSON.parse(saved) };
+    }
+    return store;
+  }
+
+  /** Waits for the last save, so a serverless function does not freeze before it lands. */
+  settle(): Promise<void> {
+    return this.pending;
+  }
 
   constructor(dir: string) {
     mkdirSync(dir, { recursive: true });
@@ -111,6 +130,12 @@ export class Store {
 
   /** Atomic write, so a crash mid-save cannot leave a half-written file. */
   private flush() {
+    if (this.remote) {
+      const json = JSON.stringify(this.data);
+      const remote = this.remote;
+      this.pending = this.pending.then(() => remote.save(json)).catch(() => undefined);
+      return;
+    }
     const tmp = `${this.file}.tmp`;
     writeFileSync(tmp, JSON.stringify(this.data, null, 2));
     renameSync(tmp, this.file);

@@ -2,7 +2,7 @@ import { timingSafeEqual } from "node:crypto";
 import Fastify from "fastify";
 import cors from "@fastify/cors";
 import { z } from "zod";
-import { createChain, loadDeployment, VaultService } from "@thunai/evm";
+import { blobState, createChain, loadDeployment, VaultService } from "@thunai/evm";
 import {
   HOLD_REASON,
   HOLD_REASON_NAME,
@@ -20,7 +20,7 @@ import { HOLD_OPENED_TOPIC, SOS_RAISED_TOPIC, extractLogs, signatureMatches, top
 import { Pager, type PushTarget } from "./pager";
 
 /**
- * The Companion agent.
+ * The SafeSend agent.
  *
  * It runs continuously for every family and does four jobs: run the allowance, read the
  * situation, break the isolation, and fail safe. What it never does is decide. The hold
@@ -29,9 +29,11 @@ import { Pager, type PushTarget } from "./pager";
  */
 
 const env = loadEnv();
+const ON_VERCEL = Boolean(process.env.VERCEL);
 
 const app = Fastify({
-  logger: { level: env.LOG_LEVEL, transport: { target: "pino-pretty" } },
+  // Pretty logs locally; plain JSON on serverless hosting, where a worker-thread transport cannot load.
+  logger: ON_VERCEL ? { level: env.LOG_LEVEL } : { level: env.LOG_LEVEL, transport: { target: "pino-pretty" } },
 });
 await app.register(cors, {
   origin: env.CORS_ORIGIN === "*" ? true : env.CORS_ORIGIN.split(",").map((s) => s.trim()),
@@ -92,6 +94,26 @@ type HoldBrief = {
 };
 
 const briefs = new Map<string, HoldBrief>();
+
+// On serverless hosting the briefs must outlive one function call, so they are kept in a remote store.
+const remoteBriefs = await blobState("agent-briefs", env.INTERNAL_TOKEN ?? "safesend-agent");
+let pendingSave: Promise<void> = Promise.resolve();
+if (remoteBriefs) {
+  const saved = await remoteBriefs.load().catch(() => undefined);
+  if (saved) for (const [id, brief] of Object.entries(JSON.parse(saved) as Record<string, HoldBrief>)) briefs.set(id, brief);
+  for (const method of ["set", "delete"] as const) {
+    const original = briefs[method].bind(briefs) as (...args: unknown[]) => unknown;
+    (briefs as unknown as Record<string, unknown>)[method] = (...args: unknown[]) => {
+      const result = original(...args);
+      const json = JSON.stringify(Object.fromEntries(briefs));
+      pendingSave = pendingSave.then(() => remoteBriefs.save(json)).catch(() => undefined);
+      return result;
+    };
+  }
+  app.addHook("onSend", async () => {
+    await pendingSave;
+  });
+}
 
 /** When the Chainlink CRE workflow last called in. Only meaningful when ORCHESTRATOR=cre. */
 let lastCreAt = 0;
@@ -631,6 +653,21 @@ app.post("/keeper/tick", async () => {
   return json(keeper.status());
 });
 
+/**
+ * Vercel Cron calls this, since serverless hosting has no background timer. Vercel signs the call with
+ * CRON_SECRET. The sweep only runs the two things any stranger may do on the contract: due top-ups and
+ * refunding pauses nobody answered.
+ */
+app.get("/keeper/cron", async (request, reply) => {
+  const secret = process.env.CRON_SECRET;
+  if (!secret || request.headers.authorization !== `Bearer ${secret}`) return reply.code(401).send({ error: "Unauthorized." });
+  await keeper.tick(true);
+  return json(keeper.status());
+});
+
+export default app;
+
+if (!ON_VERCEL) {
 const address = await app.listen({ port: env.AGENT_PORT, host: env.HOST });
 if (env.KEEPER_ENABLED) keeper.start();
 
@@ -641,7 +678,7 @@ app.log.info(
     classifier: classifier.enabled ? env.CLASSIFIER_MODEL : "rules",
     keeper: env.KEEPER_ENABLED,
   },
-  `Companion agent on ${address} — rules decide, the agent explains`,
+  `SafeSend agent on ${address} — rules decide, the agent explains`,
 );
 
 for (const signal of ["SIGINT", "SIGTERM"] as const) {
@@ -650,4 +687,5 @@ for (const signal of ["SIGINT", "SIGTERM"] as const) {
     await app.close();
     process.exit(0);
   });
+}
 }
