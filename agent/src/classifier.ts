@@ -63,6 +63,7 @@ Rules for your writing:
 - Say what the evidence shows AND what is uncertain. Reports can be wrong; no reports does not mean safe.
 - Never state as fact that it IS a scam. Say what it looks like.
 - If the signals are weak, say so and use a low confidence. A false alarm on a real family payment costs trust.
+- A new recipient alone is NOT a scam signal: every first payment to anyone is new. If the purpose and note describe an ordinary, specific everyday payment (a bill, a gift to a named relative, splitting costs with a named friend, buying from a seller met in person, moving money to the user's own account) and nobody is pressuring or rushing them, use scriptId 0 and a confidence below 0.3, and say it looks like an ordinary payment.
 - The question must fit the stated purpose and be something the guardian can check independently (who asked, how they got in touch, whether they were told to keep it secret, how the recipient was verified).`;
 
 export type ClassifierOptions = {
@@ -140,15 +141,22 @@ export class Classifier {
   }
 }
 
+let keyTurn = 0;
+
 /** Same prompt and the same JSON shape, through any OpenAI-compatible chat API. */
 async function classifyOpenAICompatible(
   openai: NonNullable<ClassifierOptions["openai"]>,
   input: ClassifierInput,
   timeoutMs: number,
 ): Promise<Classification> {
-  const response = await fetch(`${openai.baseUrl.replace(/\/$/, "")}/chat/completions`, {
+  // Several free keys may be given, comma-separated: take turns, and move on when one is rate-limited.
+  const keys = (openai.apiKey ?? "").split(",").map((k) => k.trim()).filter(Boolean);
+  let response: Response | undefined;
+  for (let attempt = 0; attempt < Math.max(1, keys.length); attempt++) {
+    const key = keys.length ? keys[(keyTurn++) % keys.length] : undefined;
+    response = await fetch(`${openai.baseUrl.replace(/\/$/, "")}/chat/completions`, {
     method: "POST",
-    headers: { "content-type": "application/json", ...(openai.apiKey ? { authorization: `Bearer ${openai.apiKey}` } : {}) },
+    headers: { "content-type": "application/json", ...(key ? { authorization: `Bearer ${key}` } : {}) },
     signal: AbortSignal.timeout(timeoutMs),
     body: JSON.stringify({
       model: openai.model,
@@ -169,7 +177,9 @@ Reply with ONLY a JSON object with these keys:
       ],
     }),
   });
-  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    if (response.status !== 429 && response.status !== 401) break;
+  }
+  if (!response || !response.ok) throw new Error(`HTTP ${response?.status}`);
   const body = (await response.json()) as { choices?: { message?: { content?: string } }[] };
   const text = body.choices?.[0]?.message?.content ?? "";
   const json = JSON.parse(text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1));
