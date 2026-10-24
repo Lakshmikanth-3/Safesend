@@ -340,6 +340,8 @@ export const api = {
 
   // holds
   hold: (holdId: string) => relayerGet<HoldState>(`/hold/${holdId}`),
+  senderCancelDigest: (holdId: string) => relayerGet<{ digest: Hex }>(`/hold/${holdId}/cancel-digest`),
+  cancelHold: (payload: { holdId: string; signature: Hex }) => relayerPost<TxResult>("/hold/cancel", payload),
   holdChallenge: (params: { familyId: string; holdId: string; release: boolean }) =>
     relayerGet<{ challenge: Hex }>(
       `/hold/challenge?familyId=${params.familyId}&holdId=${params.holdId}&release=${params.release}`,

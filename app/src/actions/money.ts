@@ -73,6 +73,13 @@ export async function sendMoney(options: {
   });
 }
 
+/** The protected user cancels their own paused payment. Signed with their own key. */
+export async function cancelMyPayment(holdId: string): Promise<void> {
+  const { digest } = await api.senderCancelDigest(holdId);
+  const signature = await signDigestWithSession(digest);
+  await api.cancelHold({ holdId, signature });
+}
+
 /**
  * The guardian decides: "Stop it" or "Allow".
  *

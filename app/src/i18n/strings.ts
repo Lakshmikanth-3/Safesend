@@ -112,7 +112,7 @@ export const strings = {
   familiesReportedThis: {
     en: "{count} report(s) about this recipient, latest {ago}.",
   },
-  guardianStoppedThis: { en: "Your guardian stopped this. {amount} is back." },
+  guardianStoppedThis: { en: "Stopped. {amount} is back." },
   guardianAllowedThis: { en: "Your guardian approved this." },
   noOneAnswered: { en: "No one answered, so your money is back." },
 

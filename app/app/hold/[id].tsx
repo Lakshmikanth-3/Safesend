@@ -36,7 +36,8 @@ import {
 } from "@/safety";
 import { useAsync, useCountdown, useFamily, useHold, useHoldBrief } from "@/hooks/useThunai";
 import { loadEvidence } from "@/network";
-import { reportPayee, resolveHold } from "@/actions/money";
+import { SessionExpiredError, cancelMyPayment, reportPayee, resolveHold } from "@/actions/money";
+import SessionPrompt from "@/ui/SessionPrompt";
 import { useDeviceState } from "@/state/store";
 
 /**
@@ -80,6 +81,7 @@ export default function HoldScreen() {
   const [actionError, setActionError] = useState<string | undefined>();
   const [outcome, setOutcome] = useState<{ released: boolean; seconds: number } | undefined>();
   const [reported, setReported] = useState(false);
+  const [needFaceId, setNeedFaceId] = useState(false);
   const [checked, setChecked] = useState<boolean[]>(GUARDIAN_CHECKLIST.map(() => false));
   const [confirmed, setConfirmed] = useState(false);
 
@@ -91,7 +93,7 @@ export default function HoldScreen() {
       ? `${hold.payeeName} (${hold.payeeContact})`
       : hold.payeeName
     : "someone new";
-  const settled = hold ? hold.status !== HOLD_STATUS.OPEN : false;
+  const settled = hold ? hold.status !== HOLD_STATUS.OPEN && hold.status !== HOLD_STATUS.APPROVED : false;
 
   async function decide(release: boolean) {
     if (!hold || !device.familyId) return;
@@ -107,6 +109,22 @@ export default function HoldScreen() {
       refresh();
     } catch (cause) {
       setActionError((cause as Error).message);
+    } finally {
+      setBusy(undefined);
+    }
+  }
+
+  /** The protected user cancels their own payment. It can only return the money to them. */
+  async function cancelMine() {
+    if (!hold) return;
+    setBusy("stop");
+    setActionError(undefined);
+    try {
+      await cancelMyPayment(hold.holdId);
+      refresh();
+    } catch (cause) {
+      if (cause instanceof SessionExpiredError) setNeedFaceId(true);
+      else setActionError((cause as Error).message);
     } finally {
       setBusy(undefined);
     }
@@ -132,7 +150,8 @@ export default function HoldScreen() {
     }
   }
 
-  if (error) {
+  // A momentary read failure must not hide a payment we already know about: keep the last state and keep polling.
+  if (error && !hold) {
     return (
       <Screen>
         <ErrorNote message={error} />
@@ -150,6 +169,32 @@ export default function HoldScreen() {
   }
 
   const tone = reasonTone(hold.reason);
+
+  // ---------------------------------------------- approved, cooling off
+
+  if (hold.status === HOLD_STATUS.APPROVED) {
+    const who = family?.guardianName ?? "Your guardian";
+    return (
+      <Screen>
+        <Card tone={{ bg: colors.heldSoft, accent: colors.held }}>
+          <Small muted={false}>{isGuardian ? "Approved" : `${who} approved this`}</Small>
+          <Amount>{hold.amountLabel}</Amount>
+          <Title>Sends in {formatCountdown(secondsLeft)}</Title>
+          <Body muted>
+            {isGuardian
+              ? `${family?.studentName ?? "They"} can still cancel until then.`
+              : "Changed your mind, or someone is pushing you? You can still cancel."}
+          </Body>
+        </Card>
+        {!isGuardian ? (
+          <StopButton label="Cancel this payment" subtitle="Money comes back to you" onPress={cancelMine} busy={busy === "stop"} />
+        ) : null}
+        {needFaceId ? <SessionPrompt onRenewed={() => setNeedFaceId(false)} /> : null}
+        {actionError ? <ErrorNote message={actionError} /> : null}
+        <SecondaryButton label={t("back", lang)} onPress={() => router.replace(isGuardian ? "/guardian" : "/student")} />
+      </Screen>
+    );
+  }
 
   // ---------------------------------------------------- already decided
 
@@ -215,7 +260,7 @@ export default function HoldScreen() {
   const reasons = pauseReasons({ reason: hold.reason, reportCount: reportCount(reports) });
   const hint = purposeHint(purpose, studentName);
   const phone = device.protectedUserPhone;
-  const guardianName = family?.guardianName ?? "your guardian";
+  const guardianName = family?.guardianName ?? "Your guardian";
 
   if (!isGuardian) {
     return (
@@ -243,6 +288,9 @@ export default function HoldScreen() {
 
         <RiskReports reports={reports} subject={payee} />
 
+        <StopButton label="Cancel this payment" subtitle="Money comes back to you" onPress={cancelMine} busy={busy === "stop"} />
+        {needFaceId ? <SessionPrompt onRenewed={() => setNeedFaceId(false)} /> : null}
+        {actionError ? <ErrorNote message={actionError} /> : null}
         <SecondaryButton label={t("back", lang)} onPress={() => router.replace("/student")} />
         <Proof>
           {t("receiptNumber", lang)} #{hold.holdId} · paused {formatAgo(Number(hold.openedAt))}
